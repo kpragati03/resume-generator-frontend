@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import html2pdf from 'html2pdf.js';
 import axios from 'axios';
-import './App.css';
+
+// Import local components
 import PersonalDetails from './components/PersonalDetails';
 import Education from './components/Education';
 import Experience from './components/Experience';
@@ -15,8 +15,79 @@ import Login from './components/auth/Login';
 import UserProfile from './components/user/UserProfile';
 import ResumeHistory from './components/ResumeHistory';
 import SharedResume from './components/SharedResume';
+import './App.css';
+
+// Theme Toggle Button Component
+const ThemeToggleButton = ({ isDarkMode, toggleTheme }) => {
+  const toggleStyle = {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '8px 16px',
+    background: isDarkMode 
+      ? 'linear-gradient(135deg, #1f2937 0%, #374151 100%)'
+      : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+    border: isDarkMode ? '1px solid #374151' : '1px solid #e2e8f0',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: isDarkMode 
+      ? '0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+      : '0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+    minWidth: '80px',
+    gap: '8px'
+  };
+
+  const trackStyle = {
+    width: '40px',
+    height: '20px',
+    backgroundColor: isDarkMode ? '#3b82f6' : '#cbd5e1',
+    borderRadius: '10px',
+    position: 'relative',
+    transition: 'all 0.3s ease'
+  };
+
+  const thumbStyle = {
+    position: 'absolute',
+    top: '2px',
+    left: isDarkMode ? '22px' : '2px',
+    width: '16px',
+    height: '16px',
+    backgroundColor: '#ffffff',
+    borderRadius: '50%',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '8px',
+    color: isDarkMode ? '#fbbf24' : '#f59e0b'
+  };
+
+  const textStyle = {
+    fontSize: '14px',
+    fontWeight: '500',
+    color: isDarkMode ? '#f1f5f9' : '#334155'
+  };
+
+  return (
+    <button onClick={toggleTheme} style={toggleStyle} aria-label="Toggle theme">
+      <div style={trackStyle}>
+        <div style={thumbStyle}>
+          <i className={`fas ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
+        </div>
+      </div>
+      <span style={textStyle}>
+        {isDarkMode ? 'Dark' : 'Light'}
+      </span>
+    </button>
+  );
+};
 
 function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const theme = isDarkMode ? 'dark' : 'light';
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [resumeData, setResumeData] = useState({
     name: '',
@@ -28,10 +99,9 @@ function App() {
     experience: [{ company: '', role: '', duration: '', description: '' }],
     skills: '',
     score: 0,
-    color: '#667eea',
+    color: '#1B6CA8',
   });
   const [selectedTemplate, setSelectedTemplate] = useState('classic');
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
@@ -39,14 +109,60 @@ function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  
-  // NEW STATES for full page view
   const [showFullResume, setShowFullResume] = useState(false);
   const [currentViewingResume, setCurrentViewingResume] = useState(null);
+  const [html2pdfLoaded, setHtml2pdfLoaded] = useState(false);
 
   const contentRef = useRef();
 
-  // MOVE calculateLiveScore BEFORE useMemo
+  // Load html2pdf library
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = () => {
+      console.log('html2pdf library loaded successfully');
+      setHtml2pdfLoaded(true);
+    };
+    script.onerror = () => {
+      console.error('Failed to load html2pdf library');
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
+
+  // Initialize theme from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+    } else {
+      setIsDarkMode(false);
+    }
+  }, []);
+
+  // Apply theme to document and save to localStorage
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark-theme');
+      document.documentElement.classList.remove('light-theme');
+    } else {
+      document.documentElement.classList.add('light-theme');
+      document.documentElement.classList.remove('dark-theme');
+    }
+    
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  const toggleTheme = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+  }, []);
+
+  // Calculate Live Score
   const calculateLiveScore = useCallback((data) => {
     let score = 0;
     if (data.name) score += 6;
@@ -73,11 +189,9 @@ function App() {
     return score;
   }, []);
 
-  // NOW useMemo can use calculateLiveScore
   const currentResumeScore = useMemo(() => calculateLiveScore(resumeData), [resumeData, calculateLiveScore]);
 
-  // Personal Details ke liye separate simple handler
-  // Updated to use functional setState to avoid stale closure and ensure inputs are editable
+  // Personal Details change handler
   const handlePersonalDetailsChange = useCallback((e) => {
     const { name, value } = e.target;
     setResumeData(prev => {
@@ -87,10 +201,7 @@ function App() {
     });
   }, [calculateLiveScore]);
 
-  // IMPORTANT FIX: robust handler — supports:
-  // 1) personal fields: handleInputChange(e) or handleInputChange(e, undefined)
-  // 2) section object: handleInputChange(e, 'someSection')
-  // 3) section array with index: handleInputChange(e, 'education', 0)
+  // Input change handler
   const handleInputChange = useCallback((e, section, index) => {
     const { name, value } = e.target;
 
@@ -100,9 +211,8 @@ function App() {
       if (section) {
         const sectionValue = prevResumeData[section];
 
-        // If section is an array and index provided/omitted -> update proper item
         if (Array.isArray(sectionValue)) {
-          const idx = (typeof index !== 'undefined') ? index : 0; // default to first entry
+          const idx = (typeof index !== 'undefined') ? index : 0;
           const newSectionData = sectionValue.map((item, i) => {
             if (i === idx) {
               return { ...item, [name]: value };
@@ -111,14 +221,11 @@ function App() {
           });
           newResumeData = { ...prevResumeData, [section]: newSectionData };
         } else if (sectionValue && typeof sectionValue === 'object') {
-          // section exists as object
           newResumeData = { ...prevResumeData, [section]: { ...sectionValue, [name]: value } };
         } else {
-          // section doesn't exist or unexpected type -> create as single-object array
           newResumeData = { ...prevResumeData, [section]: [{ [name]: value }] };
         }
       } else {
-        // no section provided -> top-level field (like name, email)
         newResumeData = { ...prevResumeData, [name]: value };
       }
 
@@ -129,6 +236,7 @@ function App() {
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+    
     try {
       const token = localStorage.getItem('token');
       console.log('=== SAVING RESUME TO DATABASE ===');
@@ -146,15 +254,14 @@ function App() {
         },
       };
 
-      // Create nested structure that backend expects
       const processedResumeData = {
-        name: resumeData.name,
-        email: resumeData.email,
-        phone: resumeData.phone,
-        address: resumeData.address,
-        profession: resumeData.profession,
-        education: resumeData.education,
-        experience: resumeData.experience,
+        name: resumeData.name || '',
+        email: resumeData.email || '',
+        phone: resumeData.phone || '',
+        address: resumeData.address || '',
+        profession: resumeData.profession || '',
+        education: resumeData.education || [{ degree: '', institution: '', year: '' }],
+        experience: resumeData.experience || [{ company: '', role: '', duration: '', description: '' }],
         skills: resumeData.skills 
           ? resumeData.skills.split(',').map(skill => skill.trim()).filter(skill => skill)
           : []
@@ -166,23 +273,18 @@ function App() {
         color: resumeData.color
       };
 
-      // ADD DEBUGGING
-      console.log('=== FRONTEND DEBUG ===');
-      console.log('Current resumeData state:', resumeData);
-      console.log('processedResumeData:', processedResumeData);
-      console.log('Final dataToSend:', dataToSend);
+      console.log('=== DETAILED DEBUG INFO ===');
       console.log('resumeData.name:', resumeData.name);
       console.log('resumeData.email:', resumeData.email);
       console.log('resumeData.phone:', resumeData.phone);
       console.log('resumeData.address:', resumeData.address);
-      console.log('Is name empty?', !resumeData.name);
-      console.log('Is email empty?', !resumeData.email);
-      console.log('Is phone empty?', !resumeData.phone);
-      console.log('Is address empty?', !resumeData.address);
+      console.log('processedResumeData:', processedResumeData);
+      console.log('Final dataToSend:', JSON.stringify(dataToSend, null, 2));
       
       const res = await axios.post('http://localhost:5000/api/resume', dataToSend, config);
       console.log('Resume saved successfully!', res.data);
       alert('Resume saved successfully!');
+      
     } catch (err) {
       console.error('Full error:', err);
       console.error('Error response:', err.response?.data);
@@ -199,10 +301,8 @@ function App() {
     }
   }, [resumeData, selectedTemplate]);
 
-  // UPDATED nextStep function with scroll to top
   const nextStep = useCallback(() => {
     setCurrentStep(prev => prev + 1);
-    // Scroll to top of page immediately after step change
     window.scrollTo({
       top: 0,
       left: 0,
@@ -210,10 +310,8 @@ function App() {
     });
   }, []);
 
-  // UPDATED prevStep function with scroll to top  
   const prevStep = useCallback(() => {
     setCurrentStep(prev => prev - 1);
-    // Scroll to top of page immediately after step change
     window.scrollTo({
       top: 0,
       left: 0,
@@ -232,7 +330,7 @@ function App() {
       experience: [{ company: '', role: '', duration: '', description: '' }],
       skills: '',
       score: 0,
-      color: '#667eea',
+      color: '#1B6CA8',
     };
     
     setResumeData(newResumeData);
@@ -246,7 +344,6 @@ function App() {
     localStorage.removeItem('resumeData');
     localStorage.removeItem('selectedTemplate');
     
-    // Scroll to top when creating new resume
     window.scrollTo({
       top: 0,
       left: 0,
@@ -262,80 +359,217 @@ function App() {
   }, []);
 
   const handlePDFDownload = useCallback(async () => {
-    if (!contentRef.current) {
-      alert('Resume content not found');
+    if (!window.html2pdf || !html2pdfLoaded) {
+      alert('PDF library is still loading. Please try again in a moment.');
       return;
     }
 
+    console.log('Starting PDF download...');
     setIsDownloading(true);
     
     try {
-      const element = contentRef.current;
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
+      let pdfElement = document.querySelector('[data-pdf-content="true"]') || 
+                       document.querySelector('.resume-template') || 
+                       document.querySelector('.resume-preview-container > div') || 
+                       document.querySelector('[class*="template"]') || 
+                       document.querySelector('.preview-content > div') || 
+                       contentRef.current;
+      
+      if (!pdfElement) {
+        alert('Resume content not found. Please make sure your resume is visible.');
+        setIsDownloading(false);
+        return;
+      }
+
+      console.log('Found PDF element:', pdfElement);
+
+      const clonedElement = pdfElement.cloneNode(true);
+      
+      clonedElement.style.transform = 'none';
+      clonedElement.style.boxShadow = 'none';
+      clonedElement.style.borderRadius = '0';
+      clonedElement.style.background = '#ffffff';
+      clonedElement.style.position = 'relative';
+      clonedElement.style.zIndex = 'auto';
+      clonedElement.style.margin = '0';
+      clonedElement.style.padding = '20px';
+      clonedElement.style.width = '794px';
+      clonedElement.style.minHeight = '1123px';
+      clonedElement.style.overflow = 'visible';
+
+      clonedElement.querySelectorAll('[style*="position: absolute"]').forEach(el => {
+        if (parseInt(el.style.zIndex) > 10 || el.style.zIndex === 'auto') {
+          el.remove();
+        }
+      });
+
+      clonedElement.querySelectorAll('*').forEach(el => {
+        el.style.animation = 'none';
+        el.style.transition = 'none';
+        if (el.style.transform && el.style.transform !== 'none') el.style.transform = 'none';
+        if (el.style.filter && el.style.filter.includes('blur')) el.style.filter = 'none';
+      });
+
+      clonedElement.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div').forEach(el => {
+        if (el.style.color === 'transparent' || el.style.opacity === '0') {
+          el.style.color = '#000000';
+          el.style.opacity = '1';
+        }
+        if (el.style.webkitTextFillColor === 'transparent') {
+          el.style.webkitTextFillColor = 'initial';
+          el.style.webkitBackgroundClip = 'initial';
+          el.style.backgroundClip = 'initial';
+        }
+        if (!el.style.fontWeight) {
+          el.style.fontWeight = window.getComputedStyle(el).fontWeight;
+        }
+      });
+
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'fixed';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.width = '794px';
+      tempContainer.style.background = '#ffffff';
+      tempContainer.appendChild(clonedElement);
+      document.body.appendChild(tempContainer);
+
+      const resumeName = resumeData.name || currentViewingResume?.name || user.name || 'Resume';
+      const cleanName = resumeName.replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_');
+
       const opt = {
-        margin: 0.5,
-        filename: `${resumeData.name || user.name || 'Resume'}-${new Date().getTime()}.pdf`,
+        margin: [10, 10, 10, 10],
+        filename: `${cleanName}_Resume.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          letterRendering: true
+          scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
+          width: 794, height: 1123, scrollX: 0, scrollY: 0, logging: false,
+          letterRendering: true, foreignObjectRendering: false, imageTimeout: 15000, removeContainer: false
         },
-        jsPDF: { 
-          unit: 'in', 
-          format: 'a4', 
-          orientation: 'portrait' 
-        }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true, precision: 16 }
       };
 
-      await html2pdf().set(opt).from(element).save();
+      console.log('Generating PDF with filename:', opt.filename);
+      await window.html2pdf().set(opt).from(clonedElement).save();
+      console.log('PDF generated successfully!');
+      
+      document.body.removeChild(tempContainer);
       
     } catch (error) {
       console.error('PDF generation failed:', error);
-      alert('Failed to generate PDF. Please try again.');
+      alert('Failed to generate PDF. Please try again or contact support if the issue persists.');
     } finally {
       setIsDownloading(false);
     }
-  }, [resumeData.name, user.name]);
+  }, [resumeData, currentViewingResume, user.name, html2pdfLoaded]);
 
   const handleFullViewPDFDownload = useCallback(async () => {
-    if (!contentRef.current || !currentViewingResume) {
-      alert('Resume content not found');
+    if (!currentViewingResume || !window.html2pdf || !html2pdfLoaded) {
+      alert('PDF library is still loading. Please try again in a moment.');
       return;
     }
 
+    console.log('Starting full view PDF download...');
     setIsDownloading(true);
     
     try {
-      const element = contentRef.current;
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
+      let pdfElement = document.querySelector('[data-pdf-content="true"]') ||
+                       document.querySelector('.resume-template') ||
+                       document.querySelector('.resume-preview-container > div') ||
+                       document.querySelector('[class*="template"]') ||
+                       document.querySelector('.preview-content > div');
+      
+      if (!pdfElement) {
+        alert('Resume content not found. Please make sure your resume is visible.');
+        setIsDownloading(false);
+        return;
+      }
+
+      console.log('Found PDF element for full view:', pdfElement);
+
+      const clonedElement = pdfElement.cloneNode(true);
+      
+      clonedElement.style.transform = 'none';
+      clonedElement.style.boxShadow = 'none';
+      clonedElement.style.borderRadius = '0';
+      clonedElement.style.background = '#ffffff';
+      clonedElement.style.position = 'relative';
+      clonedElement.style.zIndex ='auto';
+      clonedElement.style.margin = '0';
+      clonedElement.style.padding = '20px';
+      clonedElement.style.width = '794px';
+      clonedElement.style.minHeight = '1123px';
+      clonedElement.style.overflow = 'visible';
+
+      clonedElement.querySelectorAll('[style*="position: absolute"]').forEach(el => {
+        if (parseInt(el.style.zIndex) > 10 || el.style.zIndex === 'auto') {
+          el.remove();
+        }
+      });
+
+      clonedElement.querySelectorAll('*').forEach(el => {
+        el.style.animation = 'none';
+        el.style.transition = 'none';
+        if (el.style.transform && el.style.transform !== 'none') el.style.transform = 'none';
+        if (el.style.filter && el.style.filter.includes('blur')) el.style.filter = 'none';
+      });
+
+      clonedElement.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div').forEach(el => {
+        if (el.style.color === 'transparent' || el.style.opacity === '0') {
+          el.style.color = '#000000';
+          el.style.opacity = '1';
+        }
+        if (el.style.webkitTextFillColor === 'transparent') {
+          el.style.webkitTextFillColor = 'initial';
+          el.style.webkitBackgroundClip = 'initial';
+          el.style.backgroundClip = 'initial';
+        }
+        if (!el.style.fontWeight) {
+          el.style.fontWeight = window.getComputedStyle(el).fontWeight;
+        }
+      });
+
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'fixed';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.width = '794px';
+      tempContainer.style.background = '#ffffff';
+      tempContainer.appendChild(clonedElement);
+      document.body.appendChild(tempContainer);
+
+      const resumeName = currentViewingResume.name || 'Resume';
+      const cleanName = resumeName.replace(/[^a-zA-Z0-9_\-\s]/g, '').replace(/\s+/g, '_');
+
       const opt = {
-        margin: 0.5,
-        filename: `${currentViewingResume.name || 'Resume'}-${new Date().getTime()}.pdf`,
+        margin: [10, 10, 10, 10],
+        filename: `${cleanName}_Resume.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          letterRendering: true
+          scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
+          width: 794, height: 1123, scrollX: 0, scrollY: 0, logging: false,
+          letterRendering: true, foreignObjectRendering: false, imageTimeout: 15000, removeContainer: false
         },
-        jsPDF: { 
-          unit: 'in', 
-          format: 'a4', 
-          orientation: 'portrait' 
-        }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true, precision: 16 }
       };
 
-      await html2pdf().set(opt).from(element).save();
+      console.log('Generating full view PDF with filename:', opt.filename);
+      await window.html2pdf().set(opt).from(clonedElement).save();
+      console.log('Full view PDF generated successfully!');
+      
+      document.body.removeChild(tempContainer);
       
     } catch (error) {
-      console.error('PDF generation failed:', error);
-      alert('Failed to generate PDF. Please try again.');
+      console.error('Full view PDF generation failed:', error);
+      alert('Failed to generate PDF. Please try again or contact support if the issue persists.');
     } finally {
       setIsDownloading(false);
     }
-  }, [currentViewingResume]);
+  }, [currentViewingResume, html2pdfLoaded]);
 
   const handleColorChange = useCallback((hex) => {
     setResumeData(prev => ({ ...prev, color: hex }));
@@ -344,29 +578,15 @@ function App() {
   const handleTemplateChange = useCallback((templateId) => {
     setSelectedTemplate(templateId);
   }, []);
-  
-  const toggleDarkMode = useCallback(() => {
-    setIsDarkMode(prev => !prev);
-  }, []);
 
   const handleAuthSuccess = useCallback(async (token) => {
     localStorage.setItem('token', token);
     
     try {
-      const config = {
-        headers: {
-          'x-auth-token': token,
-        },
-      };
-      
+      const config = { headers: { 'x-auth-token': token } };
       const res = await axios.get('http://localhost:5000/api/auth/me', config);
       
-      setUser({
-        id: res.data.id,
-        name: res.data.name,
-        email: res.data.email
-      });
-      
+      setUser({ id: res.data.id, name: res.data.name, email: res.data.email });
       setIsLoggedIn(true);
       setShowAuth(false);
       
@@ -398,12 +618,8 @@ function App() {
       experience: resume.experience && resume.experience.length > 0 ? resume.experience : [{ company: '', role: '', duration: '', description: '' }],
       skills: Array.isArray(resume.skills) ? resume.skills.join(', ') : resume.skills || '',
       score: resume.score || 0,
-      color: resume.color || '#667eea'
+      color: resume.color || '#1B6CA8'
     };
-    
-    console.log('Processed resume data:', processedResume);
-    console.log('Template to be set:', resume.selectedTemplate || 'classic');
-    console.log('Color to be set:', resume.color || '#667eea');
     
     setResumeData(processedResume);
     setSelectedTemplate(resume.selectedTemplate || 'classic');
@@ -413,14 +629,7 @@ function App() {
     setCurrentViewingResume(null);
     setCurrentStep(1);
     
-    // Scroll to top when selecting resume
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'smooth'
-    });
-    
-    console.log('=== RESUME SELECTION COMPLETE ===');
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   }, []);
 
   const handleViewResume = useCallback((resume) => {
@@ -437,26 +646,15 @@ function App() {
       experience: resume.experience && resume.experience.length > 0 ? resume.experience : [{ company: '', role: '', duration: '', description: '' }],
       skills: Array.isArray(resume.skills) ? resume.skills.join(', ') : resume.skills || '',
       score: resume.score || 0,
-      color: resume.color || '#667eea',
+      color: resume.color || '#1B6CA8',
       selectedTemplate: resume.selectedTemplate || 'classic'
     };
-    
-    console.log('Processed viewing resume:', processedResume);
-    console.log('Template for full view:', processedResume.selectedTemplate);
-    console.log('Color for full view:', processedResume.color);
     
     setCurrentViewingResume(processedResume);
     setShowFullResume(true);
     setShowHistory(false);
     
-    // Scroll to top when viewing resume
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'smooth'
-    });
-    
-    console.log('=== FULL VIEW SETUP COMPLETE ===');
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   }, []);
 
   const handleCloseFullView = useCallback(() => {
@@ -468,27 +666,46 @@ function App() {
   const renderStep = useCallback(() => {
     switch (currentStep) {
       case 0:
-        return <TemplateSelector handleColorChange={handleColorChange} handleTemplateChange={handleTemplateChange} selectedTemplate={selectedTemplate} />;
+        return <TemplateSelector 
+          handleColorChange={handleColorChange} 
+          handleTemplateChange={handleTemplateChange} 
+          selectedTemplate={selectedTemplate} 
+          selectedColor={resumeData.color}
+          theme={theme}
+        />;
       case 1:
-        // PersonalDetails uses its own handler in your original code; keep using it
-        return <PersonalDetails handleInputChange={handlePersonalDetailsChange} data={resumeData} />;
+        return <PersonalDetails 
+          handleInputChange={handlePersonalDetailsChange} 
+          data={resumeData} 
+          theme={theme}
+        />;
       case 2:
-        // Education expects data for first education entry (you pass the array element)
-        return <Education handleInputChange={handleInputChange} data={resumeData.education[0]} />;
+        return <Education 
+          handleInputChange={handleInputChange} 
+          data={resumeData.education[0]} 
+          theme={theme}
+        />;
       case 3:
-        return <Experience handleInputChange={handleInputChange} data={resumeData.experience[0]} />;
+        return <Experience 
+          handleInputChange={handleInputChange} 
+          data={resumeData.experience[0]} 
+          theme={theme}
+        />;
       case 4:
-        return <Skills handleInputChange={handleInputChange} data={resumeData} />;
-      default:
-        return null;
+        return <Skills 
+          handleInputChange={handleInputChange} 
+          data={resumeData} 
+          theme={theme}
+        />;
+      default: return null;
     }
-  }, [currentStep, handleColorChange, handleTemplateChange, selectedTemplate, handleInputChange, handlePersonalDetailsChange, resumeData]);
+  }, [currentStep, handleColorChange, handleTemplateChange, selectedTemplate, handleInputChange, handlePersonalDetailsChange, resumeData, theme]);
 
   const renderResumeForm = useCallback(() => {
     return (
-      <div className="modern-form-container fade-in">
-        <ProgressBar currentStep={currentStep} />
-        <div className="form-content">
+      <div className="modern-card">
+        <ProgressBar currentStep={currentStep} theme={theme} />
+        <div className="form-content" style={{ marginTop: '2rem' }}>
           {renderStep()}
         </div>
         <div className="form-navigation">
@@ -496,7 +713,7 @@ function App() {
             <button 
               type="button" 
               onClick={prevStep} 
-              className="modern-btn btn-secondary slide-in-left"
+              className="modern-btn btn-secondary"
             >
               <i className="fas fa-arrow-left"></i>
               Back
@@ -507,7 +724,7 @@ function App() {
             <button 
               type="button" 
               onClick={nextStep} 
-              className="modern-btn btn-primary slide-in-right"
+              className="modern-btn btn-primary"
             >
               Next
               <i className="fas fa-arrow-right"></i>
@@ -516,7 +733,7 @@ function App() {
             <button 
               type="submit" 
               onClick={handleSubmit} 
-              className="modern-btn btn-success slide-in-right"
+              className="modern-btn btn-success"
             >
               <i className="fas fa-save"></i>
               Save Resume to Database
@@ -525,53 +742,49 @@ function App() {
         </div>
       </div>
     );
-  }, [currentStep, prevStep, nextStep, handleSubmit, renderStep]);
+  }, [currentStep, prevStep, nextStep, handleSubmit, renderStep, theme]);
 
+  // --- MODIFIED: This function is updated to pass the correct props ---
   const renderAuthForms = useCallback(() => {
     return (
-      <div className="auth-container fade-in-up">
+      <div className="modern-card auth-container">
         <div className="auth-header">
-          <h2 className="auth-title">
+          <h2 className="main-title">
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </h2>
-          <p className="auth-subtitle">
+          <p className="subtitle">
             {isLogin ? 'Sign in to continue building your resume' : 'Join us to create amazing resumes'}
           </p>
         </div>
         
-        <div className="auth-form">
+        <div>
           {isLogin ? (
-            <Login handleAuthSuccess={handleAuthSuccess} />
+            <Login 
+              handleAuthSuccess={handleAuthSuccess} 
+              theme={theme} 
+              onSwitchToRegister={() => setIsLogin(false)} // Pass function to switch to Register
+            />
           ) : (
-            <Register handleAuthSuccess={handleAuthSuccess} />
+            <Register 
+              handleAuthSuccess={handleAuthSuccess} 
+              theme={theme} 
+              onSwitchToLogin={() => setIsLogin(true)} // Pass function to switch to Login
+            />
           )}
         </div>
         
-        <div className="auth-toggle">
-          <p className="toggle-text">
-            {isLogin ? "Don't have an account?" : 'Already have an account?'}
-          </p>
-          <button 
-            className="toggle-btn" 
-            onClick={() => setIsLogin(!isLogin)}
-          >
-            {isLogin ? 'Sign Up' : 'Sign In'}
-          </button>
-        </div>
+        {/* REMOVED: The external toggle button is no longer needed here */}
       </div>
     );
-  }, [isLogin, handleAuthSuccess]);
+  }, [isLogin, handleAuthSuccess, theme]);
 
-  // Rest of your useEffects and functions remain the same...
   useEffect(() => {
     const savedResumeData = localStorage.getItem('resumeData');
     const savedTemplate = localStorage.getItem('selectedTemplate');
-    const savedDarkMode = localStorage.getItem('isDarkMode');
     
     if (savedResumeData) {
       try {
-        const parsedData = JSON.parse(savedResumeData);
-        setResumeData(parsedData);
+        setResumeData(JSON.parse(savedResumeData));
       } catch (error) {
         console.error('Error loading saved resume data:', error);
       }
@@ -579,10 +792,6 @@ function App() {
     
     if (savedTemplate) {
       setSelectedTemplate(savedTemplate);
-    }
-
-    if (savedDarkMode) {
-      setIsDarkMode(JSON.parse(savedDarkMode));
     }
   }, []);
 
@@ -595,37 +804,15 @@ function App() {
   }, [selectedTemplate]);
 
   useEffect(() => {
-    localStorage.setItem('isDarkMode', JSON.stringify(isDarkMode));
-  }, [isDarkMode]);
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
-  }, [isDarkMode]);
-
-  useEffect(() => {
     const checkAuthAndFetchUser = async () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const config = {
-            headers: {
-              'x-auth-token': token,
-            },
-          };
-          
+          const config = { headers: { 'x-auth-token': token } };
           const res = await axios.get('http://localhost:5000/api/auth/me', config);
           
           setIsLoggedIn(true);
-          setUser({
-            id: res.data.id,
-            name: res.data.name,
-            email: res.data.email
-          });
-          
+          setUser({ id: res.data.id, name: res.data.name, email: res.data.email });
           console.log('Real user data fetched:', res.data);
           
         } catch (err) {
@@ -637,24 +824,26 @@ function App() {
       } else {
         setIsLoggedIn(false);
       }
-      
       setIsLoadingUser(false);
     };
 
     checkAuthAndFetchUser();
   }, []);
 
-  // Loading component
   const LoadingComponent = useMemo(() => (
     <div className="loading-container">
       <div className="loading-content">
         <div className="loading-spinner"></div>
-        <h3 className="loading-text">Loading your workspace...</h3>
-        <p className="loading-subtitle">Preparing your resume builder</p>
+        <h3 className="loading-text">
+          Loading your workspace...
+        </h3>
+        <p className="loading-subtitle">
+          Preparing your resume builder
+        </p>
       </div>
     </div>
   ), []);
-
+  
   if (isLoadingUser) {
     return LoadingComponent;
   }
@@ -662,178 +851,166 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={
-        <div className="app-container">
+        <div className={`app-container ${theme}-theme`}>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            * { box-sizing: border-box; }
+            body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+            @media (max-width: 1200px) { .main-workspace { flex-direction: column; align-items: center; } }
+            @media (max-width: 768px) {
+              .workspace-container { flex-direction: column; }
+              .nav-controls { flex-direction: column; gap: 1rem; }
+              .nav-left, .nav-right { justify-content: center; flex-wrap: wrap; gap: 0.5rem; }
+            }
+            @media (max-width: 480px) {
+              .preview-actions { flex-direction: column; }
+              .action-button { width: 100%; }
+            }
+          `}</style>
+          
           <div className="app-content">
-            
-            {/* Header Section */}
-            <div className="header-section fade-in">
+            <div className="header-section">
               <h1 className="main-title">Resume Generator</h1>
               <p className="subtitle">Create stunning professional resumes in minutes</p>
             </div>
             
-            {/* Navigation Controls */}
-            <div className="nav-controls fade-in-up">
-              <div className="nav-left">
-                <button 
-                  onClick={handleCreateNewResume} 
-                  className="modern-btn btn-success"
-                >
-                  <i className="fas fa-plus"></i>
-                  Create New Resume
-                </button>
-                <button 
-                  onClick={toggleDarkMode} 
-                  className="modern-btn btn-glass"
-                >
-                  <i className={isDarkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
-                  {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-                </button>
+            <div className="nav-controls">
+               <div className="nav-left">
+                  <button 
+                    onClick={handleCreateNewResume} 
+                    className="modern-btn btn-success"
+                  >
+                    <i className="fas fa-plus"></i>
+                    Create New Resume
+                  </button>
+                  <ThemeToggleButton isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+                </div>
+               
+               <div className="nav-right">
+                  {isLoggedIn ? (
+                    <UserProfile 
+                      user={user} 
+                      onLogout={handleLogout} 
+                      toggleHistoryView={toggleHistoryView}
+                      theme={theme}
+                    />
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => { setShowAuth(true); setIsLogin(true); }}
+                        className="modern-btn btn-outline"
+                      >
+                        <i className="fas fa-sign-in-alt"></i>
+                        Login
+                      </button>
+                      <button
+                        onClick={() => { setShowAuth(true); setIsLogin(false); }} 
+                        className="modern-btn btn-primary"
+                      >
+                        <i className="fas fa-user-plus"></i>
+                        Sign Up
+                      </button>
+                    </>
+                  )} 
+                </div>
               </div>
-              
-              <div className="nav-right">
-                {isLoggedIn ? (
-                  <UserProfile user={user} onLogout={handleLogout} toggleHistoryView={toggleHistoryView} />
-                ) : (
-                  <>
-                    <button 
-                      onClick={() => setShowAuth(true)} 
-                      className="modern-btn btn-outline"
-                    >
-                      <i className="fas fa-sign-in-alt"></i>
-                      Login
-                    </button>
-                    <button 
-                      onClick={() => { setShowAuth(true); setIsLogin(false); }} 
-                      className="modern-btn btn-primary"
-                    >
-                      <i className="fas fa-user-plus"></i>
-                      Sign Up
-                    </button>
-                  </>
-                )} 
-              </div>
-            </div>
 
-            {/* Main Content */}
             {showFullResume ? (
-              <div className="full-resume-view fade-in">
-                <div className="full-resume-header">
+              <div className="full-resume-view">
+                <div className="modern-card full-resume-header">
                   <div className="view-title">
                     <h3>Resume Preview - Full View</h3>
                     <p>Complete resume ready for download</p>
                   </div>
                   <div className="view-actions">
-                    <button 
-                      onClick={handleCloseFullView} 
-                      className="modern-btn btn-secondary"
-                    >
-                      <i className="fas fa-arrow-left"></i>
-                      Back to History
+                    <button onClick={handleCloseFullView} className="modern-btn btn-secondary">
+                      <i className="fas fa-arrow-left"></i> Back to History
                     </button>
-                    <button 
-                      onClick={() => {
-                        handleResumeSelect(currentViewingResume);
-                      }} 
-                      className="modern-btn btn-primary"
-                    >
-                      <i className="fas fa-edit"></i>
-                      Edit Resume
+                    <button onClick={() => { handleResumeSelect(currentViewingResume); }} className="modern-btn btn-primary">
+                      <i className="fas fa-edit"></i> Edit Resume
                     </button>
-                    <button 
-                      onClick={handleCreateNewResume} 
-                      className="modern-btn btn-success"
-                    >
-                      <i className="fas fa-plus"></i>
-                      Create New Resume
+                    <button onClick={handleCreateNewResume} className="modern-btn btn-success">
+                      <i className="fas fa-plus"></i> Create New Resume
                     </button>
-                    <button 
-                      onClick={handleFullViewPDFDownload} 
-                      className="modern-btn btn-info"
-                      disabled={isDownloading}
-                    >
+                    <button onClick={handleFullViewPDFDownload} className="modern-btn btn-info" disabled={isDownloading}>
                       <i className={isDownloading ? 'fas fa-spinner fa-spin' : 'fas fa-download'}></i>
                       {isDownloading ? 'Generating PDF...' : 'Download PDF'}
                     </button>
                   </div>
                 </div>
                 
-                <div className="resume-preview-container modern-card">
-                  <div ref={contentRef}>
-                    <ResumePreview 
-                      data={currentViewingResume} 
-                      selectedTemplate={currentViewingResume?.selectedTemplate || 'classic'} 
-                      onExportPDF={handleFullViewPDFDownload}
-                      onSaveResume={() => {}}
-                      isDownloading={isDownloading}
-                    />
-                  </div>
+                <div className="resume-preview-container">
+                  <ResumePreview 
+                    ref={contentRef}
+                    data={currentViewingResume} 
+                    selectedTemplate={currentViewingResume?.selectedTemplate || 'classic'} 
+                    onExportPDF={handleFullViewPDFDownload}
+                    onSaveResume={handleSubmit}
+                    isDownloading={isDownloading}
+                    theme={theme}
+                  />
                 </div>
               </div>
             ) : (
-              <div className="main-workspace">
-                <div className="workspace-left slide-in-left">
-                  <div className="workspace-card modern-card">
-                    {showAuth ? renderAuthForms() : showHistory ? 
-                      <ResumeHistory 
-                        onSelectResume={handleResumeSelect}
-                        onViewResume={handleViewResume}
-                      /> : 
-                      renderResumeForm()
-                    }
-                  </div>
+              <div className="main-workspace-vertical">
+                <div className="workspace-form">
+                  {showAuth ? renderAuthForms() : showHistory ? 
+                    <ResumeHistory 
+                      onSelectResume={handleResumeSelect}
+                      onViewResume={handleViewResume}
+                      theme={theme}
+                    /> : 
+                    renderResumeForm()
+                  }
                 </div>
                 
-                <div className="workspace-right slide-in-right">
-                  <div className="preview-card modern-card">
-                    <div className="preview-header">
-                      <h3 className="preview-title">Live Preview</h3>
-                      <div className="resume-score">
-                        <span className="score-label">Resume Score:</span>
-                        <span className="score-value">{currentResumeScore}%</span>
-                        <div className="score-bar">
-                          <div 
-                            className="score-fill" 
-                            style={{width: `${currentResumeScore}%`}}
-                          ></div>
+                {currentStep > 0 && !showAuth && !showHistory && (
+                  <div className="workspace-preview">
+                    <div className="preview-card">
+                      <div className="preview-header">
+                        <h3 className="preview-title">Live Preview</h3>
+                        <div className="resume-score">
+                          <span className="score-label">Resume Score:</span>
+                          <span className="score-value">{currentResumeScore}%</span>
+                          <div className="score-bar">
+                            <div className="score-fill" style={{ width: `${currentResumeScore}%` }}></div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="preview-content" ref={contentRef}>
-                      <ResumePreview 
-                        data={resumeData} 
-                        selectedTemplate={selectedTemplate}
-                        onExportPDF={handlePDFDownload}
-                        onSaveResume={handleSubmit}
-                        isDownloading={isDownloading}
-                      />
-                    </div>
-                    
-                    <div className="preview-actions">
-                      <button 
-                        onClick={handleCreateNewResume} 
-                        className="modern-btn btn-success"
-                      >
-                        <i className="fas fa-plus"></i>
-                        Create New Resume
-                      </button>
-                      <button 
-                        onClick={handlePDFDownload} 
-                        className="modern-btn btn-primary"
-                        disabled={isDownloading}
-                      >
-                        <i className={isDownloading ? 'fas fa-spinner fa-spin' : 'fas fa-download'}></i>
-                        {isDownloading ? 'Generating PDF...' : 'Download PDF'}
-                      </button>
+                      
+                      <div className="preview-content">
+                        <ResumePreview 
+                          ref={contentRef}
+                          data={resumeData} 
+                          selectedTemplate={selectedTemplate}
+                          onExportPDF={handlePDFDownload}
+                          onSaveResume={handleSubmit}
+                          isDownloading={isDownloading}
+                          theme={theme}
+                        />
+                      </div>
+                      
+                      <div className="preview-actions">
+                        <button onClick={handleCreateNewResume} className="modern-btn btn-success">
+                          <i className="fas fa-plus"></i> Create New Resume
+                        </button>
+                        <button onClick={handlePDFDownload} className="modern-btn btn-info" disabled={isDownloading}>
+                          <i className={isDownloading ? 'fas fa-spinner fa-spin' : 'fas fa-download'}></i>
+                          {isDownloading ? 'Generating PDF...' : 'Download PDF'}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
           </div>
         </div>
       } />
-      <Route path="/share/resume/:id" element={<SharedResume />} />
+      <Route path="/share/resume/:id" element={<SharedResume theme={theme} />} />
     </Routes>
   );
 }

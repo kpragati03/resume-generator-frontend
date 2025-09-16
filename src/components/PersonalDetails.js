@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import "./PersonalDetails.css";
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaLightbulb, FaArrowRight, FaBriefcase } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaLightbulb, FaBriefcase } from "react-icons/fa";
 
-export default function PersonalDetails({ handleInputChange, data }) {
+export default function PersonalDetails({ handleInputChange, data, theme }) {
   const [errors, setErrors] = useState({});
+  const [focusedField, setFocusedField] = useState('');
+  const isDarkMode = theme === 'dark';
 
   // Validate fields
   const validateField = (name, value) => {
@@ -30,16 +32,31 @@ export default function PersonalDetails({ handleInputChange, data }) {
   const handleBlur = (e) => {
     const { name, value } = e.target;
     validateField(name, value);
+    setFocusedField('');
   };
 
   // Handle change and pass to parent
   const handleChange = (e) => {
-    handleInputChange(e); // Pass to parent to update main state
-    validateField(e.target.name, e.target.value); // Local validation
+    const { name, value } = e.target;
+    console.log('PersonalDetails handleChange:', name, value);
+    console.log('Current data received:', data);
+    
+    // Create a new event object for the parent handler
+    const syntheticEvent = {
+      target: {
+        name: name,
+        value: value
+      }
+    };
+    
+    handleInputChange(syntheticEvent);
+    validateField(name, value);
   };
 
+  console.log('PersonalDetails render - current data:', data);
+
   return (
-    <div className="personal-details-container">
+    <div className={`personal-details-container theme-${theme}`}>
       <div className="personal-details-card">
         {/* Header */}
         <div className="header-section">
@@ -81,8 +98,9 @@ export default function PersonalDetails({ handleInputChange, data }) {
                   value={data.name || ''}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  onFocus={() => setFocusedField('name')}
                   placeholder="Enter your full name"
-                  className={`form-input ${errors.name ? "error" : data.name ? "success" : ""}`}
+                  className={`form-input ${focusedField === 'name' ? 'focused' : ''} ${data.name && !errors.name ? 'success' : ''} ${errors.name ? 'error' : ''}`}
                 />
                 {data.name && !errors.name && (
                   <span className="validation-icon success">
@@ -96,7 +114,7 @@ export default function PersonalDetails({ handleInputChange, data }) {
                 )}
               </div>
               {errors.name && (
-                <p className="error-message">
+                <p className={`error-message theme-${theme}`}>
                   <FaTimesCircle /> {errors.name}
                 </p>
               )}
@@ -115,8 +133,9 @@ export default function PersonalDetails({ handleInputChange, data }) {
                   value={data.email || ''}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  onFocus={() => setFocusedField('email')}
                   placeholder="Enter your email"
-                  className={`form-input ${errors.email ? "error" : data.email ? "success" : ""}`}
+                  className={`form-input ${focusedField === 'email' ? 'focused' : ''} ${data.email && !errors.email ? 'success' : ''} ${errors.email ? 'error' : ''}`}
                 />
                 {data.email && !errors.email && (
                   <span className="validation-icon success">
@@ -130,7 +149,7 @@ export default function PersonalDetails({ handleInputChange, data }) {
                 )}
               </div>
               {errors.email && (
-                <p className="error-message">
+                <p className={`error-message theme-${theme}`}>
                   <FaTimesCircle /> {errors.email}
                 </p>
               )}
@@ -149,8 +168,9 @@ export default function PersonalDetails({ handleInputChange, data }) {
                   value={data.phone || ''}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  onFocus={() => setFocusedField('phone')}
                   placeholder="Enter your phone number"
-                  className={`form-input ${errors.phone ? "error" : data.phone ? "success" : ""}`}
+                  className={`form-input ${focusedField === 'phone' ? 'focused' : ''} ${data.phone && !errors.phone ? 'success' : ''} ${errors.phone ? 'error' : ''}`}
                 />
                 {data.phone && !errors.phone && (
                   <span className="validation-icon success">
@@ -164,7 +184,7 @@ export default function PersonalDetails({ handleInputChange, data }) {
                 )}
               </div>
               {errors.phone && (
-                <p className="error-message">
+                <p className={`error-message theme-${theme}`}>
                   <FaTimesCircle /> {errors.phone}
                 </p>
               )}
@@ -183,8 +203,9 @@ export default function PersonalDetails({ handleInputChange, data }) {
                   value={data.address || ''}
                   onChange={handleChange}
                   onBlur={handleBlur}
+                  onFocus={() => setFocusedField('address')}
                   placeholder="Enter your address"
-                  className={`form-input ${errors.address ? "error" : data.address ? "success" : ""}`}
+                  className={`form-input ${focusedField === 'address' ? 'focused' : ''} ${data.address && !errors.address ? 'success' : ''} ${errors.address ? 'error' : ''}`}
                 />
                 {data.address && !errors.address && (
                   <span className="validation-icon success">
@@ -193,7 +214,7 @@ export default function PersonalDetails({ handleInputChange, data }) {
                 )}
               </div>
               {errors.address && (
-                <p className="error-message">
+                <p className={`error-message theme-${theme}`}>
                   <FaTimesCircle /> {errors.address}
                 </p>
               )}
@@ -210,8 +231,10 @@ export default function PersonalDetails({ handleInputChange, data }) {
                   name="profession"
                   value={data.profession || ''}
                   onChange={handleChange}
+                  onFocus={() => setFocusedField('profession')}
+                  onBlur={() => setFocusedField('')}
                   placeholder="Enter your profession/title"
-                  className={`form-input ${data.profession ? "success" : ""}`}
+                  className={`form-input ${focusedField === 'profession' ? 'focused' : ''} ${data.profession ? 'success' : ''}`}
                 />
                 {data.profession && (
                   <span className="validation-icon success">

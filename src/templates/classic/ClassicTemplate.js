@@ -1,506 +1,942 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import html2pdf from 'html2pdf.js';
 
-const ClassicTemplate = ({ data }) => {
+const ClassicTemplate = ({ data, isDarkMode }) => {
   const { color, name, profession, email, phone, address, education, experience, skills } = data;
+  const resumeRef = useRef();
 
-  const getHeaderColor = (baseColor) => {
-    const colorMap = {
-      '#007bff': '#0056b3',
-      '#28a745': '#1e7e34', 
-      '#dc3545': '#c82333',
-      '#343a40': '#23272b',
-      '#6f42c1': '#5a32a3',
-      '#fd7e14': '#e66100',
-      '#20c997': '#1aa179',
-      '#e83e8c': '#d91a72'
+  // Hide export PDF options when Classic template is active
+  useEffect(() => {
+    // Hide Export PDF and Download Resume buttons
+    const exportButtons = document.querySelectorAll('button');
+    exportButtons.forEach(button => {
+      const buttonText = button.textContent.toLowerCase();
+      if (buttonText.includes('export pdf') || 
+          buttonText.includes('download resume') || 
+          buttonText.includes('export') && buttonText.includes('pdf')) {
+        button.style.display = 'none';
+      }
+    });
+
+    // Alternative approach - hide by common class names or IDs
+    const elementsToHide = [
+      '.export-pdf-btn',
+      '.download-resume-btn', 
+      '#export-pdf-button',
+      '#download-resume-button',
+      '[data-action="export-pdf"]',
+      '[data-action="download-resume"]'
+    ];
+
+    elementsToHide.forEach(selector => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => {
+        if (el) el.style.display = 'none';
+      });
+    });
+
+    // Cleanup function to restore buttons when component unmounts
+    return () => {
+      exportButtons.forEach(button => {
+        const buttonText = button.textContent.toLowerCase();
+        if (buttonText.includes('export pdf') || 
+            buttonText.includes('download resume') || 
+            buttonText.includes('export') && buttonText.includes('pdf')) {
+          button.style.display = '';
+        }
+      });
+
+      elementsToHide.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => {
+          if (el) el.style.display = '';
+        });
+      });
     };
-    return colorMap[baseColor] || baseColor;
+  }, []);
+
+  const downloadPDF = () => {
+    const element = resumeRef.current;
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `${name || 'resume'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        allowTaint: true
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait' 
+      }
+    };
+
+    html2pdf().set(opt).from(element).save();
   };
-  
-  const headerColor = getHeaderColor(color);
-  const accentColor = color || '#667eea';
+
+  const getDarkerShade = (hex) => {
+    const r = Math.max(0, parseInt(hex.slice(1, 3), 16) - 40);
+    const g = Math.max(0, parseInt(hex.slice(3, 5), 16) - 40);
+    const b = Math.max(0, parseInt(hex.slice(5, 7), 16) - 40);
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  const themeColors = {
+    light: {
+      bgPrimary: '#ffffff',
+      bgSecondary: '#f8fafc',
+      textPrimary: '#2d3748',
+      textSecondary: '#4a5568',
+      textMuted: '#718096',
+      borderColor: 'rgba(226, 232, 240, 0.8)',
+      shadowSm: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      shadowMd: '0 4px 12px rgba(0, 0, 0, 0.08)',
+      shadowLg: '0 8px 25px rgba(0, 0, 0, 0.08)',
+      accentColor: color || '#667eea',
+      headerColor: color || '#667eea'
+    },
+    dark: {
+      bgPrimary: '#1a202c',
+      bgSecondary: '#2d3748',
+      textPrimary: '#f7fafc',
+      textSecondary: '#e2e8f0',
+      textMuted: '#a0aec0',
+      borderColor: 'rgba(255, 255, 255, 0.2)',
+      shadowSm: '0 4px 15px rgba(0, 0, 0, 0.3)',
+      shadowMd: '0 8px 25px rgba(139, 92, 246, 0.15)',
+      shadowLg: '0 20px 40px rgba(139, 92, 246, 0.2)',
+      accentColor: '#8b5cf6',
+      headerColor: '#8b5cf6'
+    }
+  };
+
+  const colors = themeColors[isDarkMode ? 'dark' : 'light'];
+  const primaryColor = colors.headerColor;
   const skillsArray = skills ? skills.split(',').map(skill => skill.trim()).filter(skill => skill) : [];
 
+  const styles = {
+    header: {
+      background: `linear-gradient(135deg, ${primaryColor} 0%, ${getDarkerShade(primaryColor)} 100%)`,
+      padding: '2.5rem 2.5rem',
+      position: 'relative',
+      overflow: 'hidden',
+      zIndex: 2,
+      borderRadius: '12px 12px 0 0',
+      boxShadow: isDarkMode ? '0 0 40px rgba(139, 92, 246, 0.3)' : 'none',
+      color: '#ffffff'
+    },
+    headerContent: {
+      position: 'relative',
+      zIndex: 2,
+      textAlign: 'center',
+      color: '#ffffff'
+    },
+    name: {
+      fontSize: '2.8rem',
+      fontWeight: '800',
+      margin: '0 0 0.8rem 0',
+      letterSpacing: '-0.02em',
+      textShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+      color: '#ffffff'
+    },
+    profession: {
+      fontSize: '1.3rem',
+      fontWeight: '400',
+      margin: '0',
+      opacity: '1',
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+      color: '#ffffff'
+    },
+    whiteIcon: {
+      color: '#ffffff',
+      WebkitTextFillColor: '#ffffff',
+      MozTextFillColor: '#ffffff',
+      textFillColor: '#ffffff',
+      filter: 'brightness(0) invert(1)',
+      fontSize: '16px',
+      fontWeight: 'bold'
+    }
+  };
+
   return (
-    <div className="classic-template">
-      {/* Header Section */}
-      <div className="template-header">
-        <div className="header-overlay"></div>
-        <div className="header-content">
-          <h1 className="name-title">{name || 'Your Name'}</h1>
-          <p className="profession-title">{profession || 'Your Profession'}</p>
-        </div>
-        <div className="header-decoration"></div>
-      </div>
+    <>
+      <button 
+        onClick={downloadPDF}
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          background: colors.accentColor,
+          color: '#ffffff',
+          border: 'none',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: '600',
+          zIndex: 1000,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseOver={(e) => {
+          e.target.style.transform = 'translateY(-2px)';
+          e.target.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.4)';
+        }}
+        onMouseOut={(e) => {
+          e.target.style.transform = 'translateY(0)';
+          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+        }}
+      >
+        Download PDF
+      </button>
 
-      {/* Content Section */}
-      <div className="template-content">
-        {/* Contact Information */}
-        <section className="content-section">
-          <h2 className="section-title">
-            <div className="title-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2"/>
-                <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-            </div>
-            Contact Information
-          </h2>
-          <div className="contact-grid">
-            <div className="contact-item">
-              <div className="contact-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="2"/>
-                  <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-              </div>
-              <span className="contact-text">{email || 'your.email@example.com'}</span>
-            </div>
-            <div className="contact-item">
-              <div className="contact-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-              </div>
-              <span className="contact-text">{phone || '+1 (555) 123-4567'}</span>
-            </div>
-            <div className="contact-item">
-              <div className="contact-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" strokeWidth="2"/>
-                  <circle cx="12" cy="10" r="3" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-              </div>
-              <span className="contact-text">{address || 'Your Address, City, State'}</span>
-            </div>
+      <div 
+        ref={resumeRef}
+        data-pdf-content="true"
+        style={{
+          width: '210mm',
+          minHeight: '297mm',
+          margin: '0 auto',
+          background: colors.bgPrimary,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          lineHeight: 1.4,
+          color: colors.textPrimary,
+          position: 'relative',
+          overflow: 'visible',
+          boxShadow: isDarkMode 
+            ? '0 0 0 1px rgba(139, 92, 246, 0.2), 0 25px 50px rgba(0, 0, 0, 0.5)' 
+            : '0 0 0 1px rgba(0, 0, 0, 0.05), 0 25px 50px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.3s ease',
+          borderRadius: '12px'
+        }}
+      >
+        {/* Background Effects for Dark Mode */}
+        {isDarkMode && (
+          <>
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(6, 182, 212, 0.08) 0%, transparent 50%)',
+              pointerEvents: 'none',
+              zIndex: 0
+            }}></div>
+          </>
+        )}
+
+        {/* Header Section */}
+        <header style={styles.header} className="header">
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: isDarkMode
+              ? 'radial-gradient(circle at 70% 30%, rgba(255,255,255,0.2) 0%, transparent 60%), linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%)'
+              : 'radial-gradient(circle at 70% 30%, rgba(255,255,255,0.15) 0%, transparent 60%)',
+            pointerEvents: 'none'
+          }}></div>
+
+          <div style={{
+            position: 'absolute',
+            top: '-50%',
+            right: '-20%',
+            width: '300px',
+            height: '300px',
+            background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%',
+            transform: 'rotate(45deg)'
+          }}></div>
+
+          <div style={styles.headerContent} className="header-content">
+            <h1 style={styles.name} className="name">
+              {name || 'Your Name'}
+            </h1>
+            <p style={styles.profession} className="profession">
+              {profession || 'Your Profession'}
+            </p>
           </div>
-        </section>
+        </header>
 
-        {/* Education */}
-        {education && education.length > 0 && education[0].degree && (
-          <section className="content-section">
-            <h2 className="section-title">
-              <div className="title-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M6 12v5c3 3 9 3 12 0v-5" stroke="currentColor" strokeWidth="2"/>
-                </svg>
+        {/* Content Section */}
+        <div style={{
+          padding: '1.5rem 2rem 2rem 2rem',
+          background: colors.bgPrimary,
+          position: 'relative',
+          zIndex: 2
+        }}>
+          {/* Contact Information */}
+          <section style={{ marginBottom: '2rem' }}>
+            <h2 style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              color: colors.accentColor,
+              fontSize: '1.3rem',
+              fontWeight: '700',
+              margin: '0 0 1.5rem 0',
+              paddingBottom: '0.8rem',
+              borderBottom: `3px solid ${colors.accentColor}`,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              position: 'relative',
+              textShadow: isDarkMode ? `0 0 10px ${colors.accentColor}` : 'none'
+            }}>
+              <div style={{
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: colors.accentColor,
+                borderRadius: '8px',
+                flexShrink: 0,
+                boxShadow: isDarkMode ? `0 0 15px ${colors.accentColor}` : 'none'
+              }}>
+                <span style={styles.whiteIcon}>●</span>
               </div>
-              Education
+              Contact Information
+              <div style={{
+                position: 'absolute',
+                bottom: '-3px',
+                left: 0,
+                width: '60px',
+                height: '3px',
+                background: isDarkMode 
+                  ? `linear-gradient(90deg, ${colors.accentColor}, #06b6d4)` 
+                  : `linear-gradient(90deg, ${colors.accentColor}, transparent)`,
+                boxShadow: isDarkMode ? `0 0 10px ${colors.accentColor}` : 'none'
+              }}></div>
             </h2>
-            <div className="education-item">
-              <div className="timeline-dot"></div>
-              <div className="education-content">
-                <h3 className="education-degree">{education[0].degree}</h3>
-                <p className="education-institution">{education[0].institution}</p>
-                <p className="education-year">Class of {education[0].year}</p>
-              </div>
-            </div>
-          </section>
-        )}
 
-        {/* Professional Experience */}
-        {experience && experience.length > 0 && experience[0].company && (
-          <section className="content-section">
-            <h2 className="section-title">
-              <div className="title-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="8" y1="21" x2="16" y2="21" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-              </div>
-              Professional Experience
-            </h2>
-            <div className="experience-item">
-              <div className="timeline-dot"></div>
-              <div className="experience-content">
-                <h3 className="experience-role">{experience[0].role}</h3>
-                <p className="experience-company">{experience[0].company}</p>
-                <p className="experience-duration">{experience[0].duration}</p>
-                {experience[0].description && (
-                  <p className="experience-description">{experience[0].description}</p>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Skills */}
-        {skillsArray.length > 0 && (
-          <section className="content-section">
-            <h2 className="section-title">
-              <div className="title-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <polygon points="12,2 15.09,8.26 22,9 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9 8.91,8.26 12,2" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-              </div>
-              Core Skills
-            </h2>
-            <div className="skills-container">
-              {skillsArray.map((skill, index) => (
-                <span key={index} className="skill-tag">
-                  {skill}
-                </span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+              {[
+                { symbol: '@', text: email || 'your.email@example.com' },
+                { symbol: '☎', text: phone || '+1 (555) 123-4567' },
+                { symbol: '◐', text: address || 'Your Address, City, State' }
+              ].map((item, index) => (
+                <div key={index} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '1.2rem',
+                  background: isDarkMode 
+                    ? 'rgba(255, 255, 255, 0.08)' 
+                    : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.borderColor}`,
+                  borderLeft: `6px solid ${colors.accentColor}`,
+                  transition: 'all 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: colors.shadowSm
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: isDarkMode 
+                      ? `linear-gradient(135deg, ${colors.accentColor}08 0%, transparent 100%)` 
+                      : `linear-gradient(135deg, ${colors.accentColor}05 0%, transparent 100%)`
+                  }}></div>
+                  
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: colors.accentColor,
+                    borderRadius: '10px',
+                    marginRight: '1.2rem',
+                    flexShrink: 0,
+                    boxShadow: isDarkMode 
+                      ? `0 4px 12px ${colors.accentColor}60, 0 0 15px ${colors.accentColor}40` 
+                      : `0 4px 12px ${colors.accentColor}40`
+                  }}>
+                    <span style={{
+                      ...styles.whiteIcon,
+                      fontSize: '18px'
+                    }}>
+                      {item.symbol}
+                    </span>
+                  </div>
+                  
+                  <span style={{
+                    fontSize: '1rem',
+                    color: colors.textSecondary,
+                    fontWeight: '500',
+                    position: 'relative',
+                    zIndex: 1
+                  }}>
+                    {item.text}
+                  </span>
+                </div>
               ))}
             </div>
           </section>
-        )}
+
+          {/* Education */}
+          {education && education.length > 0 && education[0].degree && (
+            <section style={{ marginBottom: '2rem' }}>
+              <h2 style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                color: colors.accentColor,
+                fontSize: '1.3rem',
+                fontWeight: '700',
+                margin: '0 0 1.5rem 0',
+                paddingBottom: '0.8rem',
+                borderBottom: `3px solid ${colors.accentColor}`,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                position: 'relative',
+                textShadow: isDarkMode ? `0 0 10px ${colors.accentColor}` : 'none'
+              }}>
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: colors.accentColor,
+                  borderRadius: '8px',
+                  flexShrink: 0,
+                  boxShadow: isDarkMode ? `0 0 15px ${colors.accentColor}` : 'none'
+                }}>
+                  <span style={styles.whiteIcon}>◆</span>
+                </div>
+                Education
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-3px',
+                  left: 0,
+                  width: '60px',
+                  height: '3px',
+                  background: isDarkMode 
+                    ? `linear-gradient(90deg, ${colors.accentColor}, #06b6d4)` 
+                    : `linear-gradient(90deg, ${colors.accentColor}, transparent)`,
+                  boxShadow: isDarkMode ? `0 0 10px ${colors.accentColor}` : 'none'
+                }}></div>
+              </h2>
+
+              <div style={{
+                background: isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.08)' 
+                  : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                padding: '2rem',
+                borderRadius: '16px',
+                border: `1px solid ${colors.borderColor}`,
+                borderLeft: `6px solid ${colors.accentColor}`,
+                position: 'relative',
+                marginBottom: '1rem',
+                transition: 'all 0.3s ease',
+                backdropFilter: 'blur(10px)',
+                boxShadow: colors.shadowMd
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  left: '-8px',
+                  top: '2rem',
+                  width: '12px',
+                  height: '12px',
+                  background: colors.accentColor,
+                  border: `3px solid ${colors.bgPrimary}`,
+                  borderRadius: '50%',
+                  boxShadow: isDarkMode 
+                    ? `0 0 0 3px ${colors.accentColor}40, 0 0 12px ${colors.accentColor}` 
+                    : `0 0 0 3px ${colors.accentColor}40`
+                }}></div>
+
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '700',
+                    color: colors.textPrimary,
+                    margin: '0 0 0.6rem 0',
+                    lineHeight: '1.3',
+                    textShadow: isDarkMode ? '0 0 10px rgba(139, 92, 246, 0.2)' : 'none'
+                  }}>
+                    {education[0].degree}
+                  </h3>
+                  <p style={{
+                    fontSize: '1.1rem',
+                    color: colors.accentColor,
+                    fontWeight: '600',
+                    margin: '0 0 0.6rem 0',
+                    textShadow: isDarkMode ? `0 0 8px ${colors.accentColor}` : 'none'
+                  }}>
+                    {education[0].institution}
+                  </p>
+                  <p style={{
+                    fontSize: '0.9rem',
+                    color: colors.textMuted,
+                    margin: '0',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <span style={{
+                      width: '6px',
+                      height: '6px',
+                      background: colors.accentColor,
+                      borderRadius: '50%',
+                      marginRight: '0.6rem',
+                      boxShadow: isDarkMode ? `0 0 6px ${colors.accentColor}` : 'none'
+                    }}></span>
+                    Class of {education[0].year}
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Professional Experience */}
+          {experience && experience.length > 0 && experience[0].company && (
+            <section style={{ marginBottom: '2rem' }}>
+              <h2 style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                color: colors.accentColor,
+                fontSize: '1.3rem',
+                fontWeight: '700',
+                margin: '0 0 1.5rem 0',
+                paddingBottom: '0.8rem',
+                borderBottom: `3px solid ${colors.accentColor}`,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                position: 'relative',
+                textShadow: isDarkMode ? `0 0 10px ${colors.accentColor}` : 'none'
+              }}>
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: colors.accentColor,
+                  borderRadius: '8px',
+                  flexShrink: 0,
+                  boxShadow: isDarkMode ? `0 0 15px ${colors.accentColor}` : 'none'
+                }}>
+                  <span style={styles.whiteIcon}>■</span>
+                </div>
+                Professional Experience
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-3px',
+                  left: 0,
+                  width: '60px',
+                  height: '3px',
+                  background: isDarkMode 
+                    ? `linear-gradient(90deg, ${colors.accentColor}, #06b6d4)` 
+                    : `linear-gradient(90deg, ${colors.accentColor}, transparent)`,
+                  boxShadow: isDarkMode ? `0 0 10px ${colors.accentColor}` : 'none'
+                }}></div>
+              </h2>
+
+              <div style={{
+                background: isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.08)' 
+                  : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                padding: '2rem',
+                borderRadius: '16px',
+                border: `1px solid ${colors.borderColor}`,
+                borderLeft: `6px solid ${colors.accentColor}`,
+                position: 'relative',
+                transition: 'all 0.3s ease',
+                backdropFilter: 'blur(10px)',
+                boxShadow: colors.shadowMd
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  left: '-8px',
+                  top: '2rem',
+                  width: '12px',
+                  height: '12px',
+                  background: colors.accentColor,
+                  border: `3px solid ${colors.bgPrimary}`,
+                  borderRadius: '50%',
+                  boxShadow: isDarkMode 
+                    ? `0 0 0 3px ${colors.accentColor}40, 0 0 12px ${colors.accentColor}` 
+                    : `0 0 0 3px ${colors.accentColor}40`
+                }}></div>
+
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <h3 style={{
+                    fontSize: '1.3rem',
+                    fontWeight: '700',
+                    color: colors.textPrimary,
+                    margin: '0 0 0.6rem 0',
+                    lineHeight: '1.3',
+                    textShadow: isDarkMode ? '0 0 10px rgba(139, 92, 246, 0.2)' : 'none'
+                  }}>
+                    {experience[0].role}
+                  </h3>
+                  <p style={{
+                    fontSize: '1.1rem',
+                    color: colors.accentColor,
+                    fontWeight: '600',
+                    margin: '0 0 0.6rem 0',
+                    textShadow: isDarkMode ? `0 0 8px ${colors.accentColor}` : 'none'
+                  }}>
+                    {experience[0].company}
+                  </p>
+                  <p style={{
+                    fontSize: '0.9rem',
+                    color: colors.textMuted,
+                    margin: '0 0 1rem 0',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <span style={{
+                      width: '6px',
+                      height: '6px',
+                      background: colors.accentColor,
+                      borderRadius: '50%',
+                      marginRight: '0.6rem',
+                      boxShadow: isDarkMode ? `0 0 6px ${colors.accentColor}` : 'none'
+                    }}></span>
+                    {experience[0].duration}
+                  </p>
+                  {experience[0].description && (
+                    <p style={{
+                      fontSize: '1rem',
+                      color: colors.textSecondary,
+                      lineHeight: '1.6',
+                      margin: '0',
+                      paddingTop: '0.8rem',
+                      borderTop: `1px solid ${colors.borderColor}`
+                    }}>
+                      {experience[0].description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Skills */}
+          {skillsArray.length > 0 && (
+            <section style={{ marginBottom: '2rem', pageBreakInside: 'avoid' }} className="skills-section">
+              <h2 style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                color: colors.accentColor,
+                fontSize: '1.2rem',
+                fontWeight: '700',
+                margin: '0 0 1rem 0',
+                paddingBottom: '0.6rem',
+                borderBottom: `3px solid ${colors.accentColor}`,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                position: 'relative',
+                textShadow: isDarkMode ? `0 0 10px ${colors.accentColor}` : 'none'
+              }}>
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: colors.accentColor,
+                  borderRadius: '6px',
+                  flexShrink: 0,
+                  boxShadow: isDarkMode ? `0 0 15px ${colors.accentColor}` : 'none'
+                }}>
+                  <span style={{...styles.whiteIcon, fontSize: '14px'}}>★</span>
+                </div>
+                Core Skills
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-3px',
+                  left: 0,
+                  width: '50px',
+                  height: '3px',
+                  background: isDarkMode 
+                    ? `linear-gradient(90deg, ${colors.accentColor}, #06b6d4)` 
+                    : `linear-gradient(90deg, ${colors.accentColor}, transparent)`,
+                  boxShadow: isDarkMode ? `0 0 10px ${colors.accentColor}` : 'none'
+                }}></div>
+              </h2>
+
+              <div className="skills-container" style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '0.8rem',
+                marginTop: '0.8rem',
+                pageBreakInside: 'avoid'
+              }}>
+                {skillsArray.map((skill, index) => (
+                  <div key={index} className="skill-pill" style={{
+                    background: `linear-gradient(135deg, ${colors.accentColor} 0%, ${colors.headerColor} 100%)`,
+                    padding: '0.6rem 1rem',
+                    borderRadius: '20px',
+                    fontSize: '0.85rem',
+                    fontWeight: '600',
+                    boxShadow: isDarkMode 
+                      ? `0 3px 8px ${colors.accentColor}40, 0 0 12px ${colors.accentColor}20` 
+                      : `0 3px 8px ${colors.accentColor}30`,
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    cursor: 'default',
+                    display: 'inline-block'
+                  }}>
+                    <span style={{
+                      color: '#ffffff',
+                      WebkitTextFillColor: '#ffffff',
+                      MozTextFillColor: '#ffffff',
+                      textFillColor: '#ffffff',
+                      textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
+                      position: 'relative',
+                      zIndex: 2,
+                      display: 'inline-block',
+                      fontSize: '0.85rem',
+                      fontWeight: '600'
+                    }}>
+                      {skill}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        <style jsx>{`
+          @media print {
+            @page {
+              size: A4;
+              margin: 15mm 10mm 15mm 10mm;
+            }
+            
+            html, body {
+              height: auto !important;
+              overflow: visible !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+
+            body {
+              background: #ffffff !important;
+            }
+            
+            div[data-pdf-content="true"] {
+              position: static !important;
+              margin: 0 !important;
+              width: 100% !important;
+              height: auto !important;
+              min-height: auto !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              overflow: visible !important;
+              page-break-inside: auto !important;
+            }
+
+            div[data-pdf-content="true"] > div:first-child:not(.header):not([style*="padding"]) {
+              display: none !important;
+            }
+            
+            .header > div:not(.header-content) {
+              display: none !important;
+            }
+            
+            .header-content {
+              display: block !important;
+            }
+
+            * {
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              box-shadow: none !important;
+            }
+
+            .header { 
+              background: ${primaryColor} !important; 
+              color: #ffffff !important;
+              padding: 1.2rem 1.5rem !important;
+              border-radius: 0 !important;
+              page-break-after: avoid !important;
+            }
+            
+            .name { 
+              color: #ffffff !important;
+              font-size: 1.8rem !important;
+              margin: 0 0 0.3rem 0 !important;
+            }
+            
+            .profession { 
+              color: #ffffff !important;
+              font-size: 0.9rem !important;
+              margin: 0 !important;
+            }
+            
+            .header * {
+              color: #ffffff !important;
+            }
+
+            div[style*="padding: 1.5rem 2rem 2rem 2rem"] {
+              padding: 1rem 1.2rem 1rem 1.2rem !important;
+            }
+
+            section {
+              margin-bottom: 1.2rem !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+
+            .skills-section {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              margin-bottom: 0.8rem !important;
+            }
+
+            section:last-of-type {
+              margin-bottom: 0.5rem !important;
+            }
+
+            h2 {
+              font-size: 1rem !important;
+              margin: 0 0 0.8rem 0 !important;
+              padding-bottom: 0.4rem !important;
+              page-break-after: avoid !important;
+            }
+
+            div[style*="padding: 1.2rem"] {
+              padding: 0.6rem !important;
+            }
+
+            div[style*="padding: 2rem"] {
+              padding: 1rem !important;
+            }
+
+            h3 {
+              font-size: 0.95rem !important;
+              margin: 0 0 0.2rem 0 !important;
+            }
+
+            p {
+              font-size: 0.8rem !important;
+              line-height: 1.3 !important;
+              margin: 0 0 0.3rem 0 !important;
+            }
+
+            .skill-pill {
+              background: ${colors.accentColor} !important;
+              color: #ffffff !important;
+              -webkit-text-fill-color: #ffffff !important;
+              text-fill-color: #ffffff !important;
+              -moz-text-fill-color: #ffffff !important;
+              padding: 0.3rem 0.6rem !important;
+              font-size: 0.7rem !important;
+              margin: 0.1rem !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+
+            .skills-container {
+              gap: 0.4rem !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+
+            .skills-container .skill-pill span {
+              color: #ffffff !important;
+              -webkit-text-fill-color: #ffffff !important;
+              text-fill-color: #ffffff !important;
+              -moz-text-fill-color: #ffffff !important;
+              font-size: 0.7rem !important;
+            }
+
+            div[style*="width: 24px"] {
+              width: 18px !important;
+              height: 18px !important;
+            }
+
+            div[style*="width: 20px"] {
+              width: 16px !important;
+              height: 16px !important;
+            }
+
+            div[style*="width: 40px"] {
+              width: 28px !important;
+              height: 28px !important;
+            }
+
+            span[style*="font-size: 18px"] {
+              font-size: 14px !important;
+            }
+
+            span[style*="font-size: 14px"] {
+              font-size: 10px !important;
+            }
+
+            /* Ensure skills section doesn't break */
+            .skills-section {
+              orphans: 3 !important;
+              widows: 3 !important;
+            }
+
+            /* Force skills to stay together */
+            .skills-container {
+              display: block !important;
+              column-count: auto !important;
+            }
+
+            .skill-pill {
+              display: inline-block !important;
+              vertical-align: top !important;
+            }
+
+            /* Hide download button in PDF */
+            button {
+              display: none !important;
+            }
+          }
+
+          .skill-pill {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            text-fill-color: #ffffff !important;
+            -moz-text-fill-color: #ffffff !important;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8) !important;
+          }
+
+          .skills-container .skill-pill {
+            color: #ffffff !important;
+          }
+
+          .skills-container * {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            text-fill-color: #ffffff !important;
+            -moz-text-fill-color: #ffffff !important;
+          }
+
+          @keyframes float-particle {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(15px) rotate(240deg); }
+          }
+        `}</style>
       </div>
-
-      <style jsx>{`
-        .classic-template {
-          max-width: 210mm;
-          margin: 0 auto;
-          background: white;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          line-height: 1.6;
-          color: #2d3748;
-          position: relative;
-          overflow: hidden;
-          box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
-        }
-
-        .template-header {
-          background: linear-gradient(135deg, ${headerColor} 0%, ${accentColor} 100%);
-          color: white;
-          padding: 3rem 2.5rem;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .header-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.15) 0%, transparent 60%);
-          pointer-events: none;
-        }
-
-        .header-decoration {
-          position: absolute;
-          top: -50%;
-          right: -20%;
-          width: 300px;
-          height: 300px;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 50%;
-          transform: rotate(45deg);
-        }
-
-        .header-content {
-          position: relative;
-          z-index: 2;
-          text-align: center;
-        }
-
-        .name-title {
-          font-size: 3rem;
-          font-weight: 800;
-          margin: 0 0 0.75rem 0;
-          letter-spacing: -0.02em;
-          text-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.9) 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        .profession-title {
-          font-size: 1.4rem;
-          font-weight: 400;
-          margin: 0;
-          opacity: 0.95;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .template-content {
-          padding: 2.5rem;
-          background: white;
-        }
-
-        .content-section {
-          margin-bottom: 2.5rem;
-        }
-
-        .section-title {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          color: ${accentColor};
-          font-size: 1.3rem;
-          font-weight: 700;
-          margin: 0 0 1.5rem 0;
-          padding-bottom: 0.75rem;
-          border-bottom: 3px solid ${accentColor};
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          position: relative;
-        }
-
-        .section-title::after {
-          content: '';
-          position: absolute;
-          bottom: -3px;
-          left: 0;
-          width: 40px;
-          height: 3px;
-          background: linear-gradient(90deg, ${accentColor}, transparent);
-        }
-
-        .title-icon {
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: ${accentColor};
-          color: white;
-          border-radius: 6px;
-          flex-shrink: 0;
-        }
-
-        .contact-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1rem;
-        }
-
-        .contact-item {
-          display: flex;
-          align-items: center;
-          padding: 1rem 1.25rem;
-          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-          border-radius: 12px;
-          border: 1px solid rgba(226, 232, 240, 0.8);
-          border-left: 4px solid ${accentColor};
-          transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .contact-item::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(135deg, ${accentColor}05 0%, transparent 100%);
-        }
-
-        .contact-item:hover {
-          transform: translateX(4px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-          border-left-width: 6px;
-        }
-
-        .contact-icon {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: ${accentColor};
-          color: white;
-          border-radius: 10px;
-          margin-right: 1rem;
-          flex-shrink: 0;
-          box-shadow: 0 4px 12px ${accentColor}40;
-        }
-
-        .contact-text {
-          font-size: 1rem;
-          color: #4a5568;
-          font-weight: 500;
-          position: relative;
-          z-index: 1;
-        }
-
-        .education-item, .experience-item {
-          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-          padding: 2rem;
-          border-radius: 16px;
-          border: 1px solid rgba(226, 232, 240, 0.8);
-          border-left: 6px solid ${accentColor};
-          position: relative;
-          margin-bottom: 1.5rem;
-          transition: all 0.3s ease;
-        }
-
-        .education-item:hover, .experience-item:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .timeline-dot {
-          position: absolute;
-          left: -9px;
-          top: 2rem;
-          width: 12px;
-          height: 12px;
-          background: ${accentColor};
-          border: 3px solid white;
-          border-radius: 50%;
-          box-shadow: 0 0 0 3px ${accentColor}40;
-        }
-
-        .education-content, .experience-content {
-          position: relative;
-          z-index: 1;
-        }
-
-        .education-degree, .experience-role {
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #1a202c;
-          margin: 0 0 0.5rem 0;
-          line-height: 1.3;
-        }
-
-        .education-institution, .experience-company {
-          font-size: 1.1rem;
-          color: ${accentColor};
-          font-weight: 600;
-          margin: 0 0 0.5rem 0;
-        }
-
-        .education-year, .experience-duration {
-          font-size: 0.95rem;
-          color: #718096;
-          margin: 0 0 0.75rem 0;
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-        }
-
-        .education-year::before, .experience-duration::before {
-          content: '';
-          width: 6px;
-          height: 6px;
-          background: ${accentColor};
-          border-radius: 50%;
-          margin-right: 0.5rem;
-        }
-
-        .experience-description {
-          font-size: 1rem;
-          color: #4a5568;
-          line-height: 1.7;
-          margin: 0;
-          padding-top: 0.5rem;
-          border-top: 1px solid rgba(226, 232, 240, 0.6);
-        }
-
-        .skills-container {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.875rem;
-          margin-top: 0.75rem;
-        }
-
-        .skill-tag {
-          background: linear-gradient(135deg, ${accentColor} 0%, ${headerColor} 100%);
-          color: white;
-          padding: 0.75rem 1.25rem;
-          border-radius: 25px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          box-shadow: 0 4px 12px ${accentColor}30;
-          transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .skill-tag::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-          transition: left 0.6s;
-        }
-
-        .skill-tag:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px ${accentColor}40;
-        }
-
-        .skill-tag:hover::before {
-          left: 100%;
-        }
-
-        @media (max-width: 768px) {
-          .template-header {
-            padding: 2rem 1.5rem;
-          }
-
-          .name-title {
-            font-size: 2.25rem;
-          }
-
-          .profession-title {
-            font-size: 1.1rem;
-          }
-
-          .template-content {
-            padding: 1.5rem;
-          }
-
-          .contact-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .section-title {
-            font-size: 1.1rem;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-          }
-
-          .education-item, .experience-item {
-            padding: 1.5rem;
-          }
-
-          .skills-container {
-            gap: 0.5rem;
-          }
-
-          .skill-tag {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .template-header {
-            padding: 1.5rem 1rem;
-          }
-
-          .name-title {
-            font-size: 1.875rem;
-          }
-
-          .template-content {
-            padding: 1rem;
-          }
-
-          .contact-item {
-            padding: 0.875rem 1rem;
-          }
-
-          .education-item, .experience-item {
-            padding: 1.25rem;
-          }
-        }
-      `}</style>
-    </div>
+    </>
   );
 };
 

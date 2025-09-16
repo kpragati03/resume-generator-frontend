@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-const UserProfile = ({ user, onLogout, toggleHistoryView }) => {
+const UserProfile = ({ user, onLogout, toggleHistoryView, theme }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const triggerRef = useRef(null);
@@ -43,98 +43,164 @@ const UserProfile = ({ user, onLogout, toggleHistoryView }) => {
 
   const handleLogout = () => {
     setShowMenu(false);
-    // Clear any stored user data
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    sessionStorage.clear();
-    
-    // Call the logout function passed from parent
     if (onLogout && typeof onLogout === 'function') {
       onLogout();
     }
   };
 
+  // Define a very light purple base for glassmorphism
+  const glassBasePurple = 'rgba(230, 230, 250, 0.2)'; // Lavender blush with transparency
+  const glassBorderLight = 'rgba(255, 255, 255, 0.3)';
+  const glassBorderDark = 'rgba(255, 255, 255, 0.1)';
+
+  const themeStyles = {
+    light: {
+      trigger: {
+        background: glassBasePurple,
+        border: `1px solid ${glassBorderLight}`,
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+      },
+      triggerHover: {
+        background: 'rgba(230, 230, 250, 0.3)', // Slightly more opaque on hover
+        boxShadow: '0 6px 25px rgba(0, 0, 0, 0.15)'
+      },
+      backdrop: 'rgba(240, 240, 255, 0.5)', // Very light purple backdrop
+      menuCard: {
+        background: 'rgba(245, 245, 255, 0.9)', // Lighter, more opaque purple for menu
+        border: `1px solid ${glassBorderLight}`,
+        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.08)'
+      },
+      text: {
+        primary: '#212529', // Dark text for contrast on light purple
+        secondary: '#495057',
+        muted: '#6c757d'
+      }
+    },
+    dark: {
+      trigger: {
+        background: 'rgba(70, 40, 100, 0.2)', // Darker translucent purple
+        border: `1px solid ${glassBorderDark}`,
+        boxShadow: '0 8px 32px rgba(144, 205, 244, 0.15)'
+      },
+      triggerHover: {
+        background: 'rgba(70, 40, 100, 0.3)', // Slightly more opaque on hover
+        boxShadow: '0 8px 32px rgba(144, 205, 244, 0.25)'
+      },
+      backdrop: 'rgba(15, 15, 35, 0.8)', // Keep dark backdrop for contrast
+      menuCard: {
+        background: 'rgba(45, 55, 72, 0.95)', // Keep existing dark menu card for dark mode
+        border: `1px solid ${glassBorderDark}`,
+        boxShadow: '0 25px 50px rgba(144, 205, 244, 0.2), 0 10px 20px rgba(0, 0, 0, 0.5)'
+      },
+      text: {
+        primary: '#f7fafc',
+        secondary: '#e2e8f0',
+        muted: '#a0aec0'
+      }
+    }
+  };
+
+  const currentTheme = themeStyles[theme];
+
   const MenuPortal = () => {
     if (!showMenu) return null;
 
     return createPortal(
-      <>
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 999999
+        }}
+      >
         <div 
-          className="menu-backdrop-portal"
-          onClick={() => setShowMenu(false)}
           style={{
-            position: 'fixed',
+            position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.3)',
-            backdropFilter: 'blur(5px)',
-            zIndex: 999999,
+            background: currentTheme.backdrop,
+            backdropFilter: 'blur(8px)', // Glassmorphism blur
+            zIndex: 999999
           }}
+          onClick={() => setShowMenu(false)}
         />
         <div 
           id="user-dropdown-portal"
-          className="user-dropdown-portal"
           style={{
-            position: 'fixed',
-            top: `${menuPosition.top}px`,
-            right: `${menuPosition.right}px`,
+            position: 'absolute',
             minWidth: '280px',
             maxWidth: '90vw',
-            background: 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
+            backdropFilter: 'blur(25px)', // Stronger blur for the menu card
             borderRadius: '16px',
             padding: '0.75rem',
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.3), 0 10px 20px rgba(0, 0, 0, 0.2)',
             zIndex: 1000000,
-            animation: 'menuFade 0.3s ease-out',
+            animation: 'menuFade 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            top: `${menuPosition.top}px`,
+            right: `${menuPosition.right}px`,
+            ...currentTheme.menuCard
           }}
         >
           {/* User Info Header */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            padding: '0.75rem',
-            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-            borderRadius: '12px',
-            marginBottom: '0.75rem',
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          <div 
+            style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: '700',
-              fontSize: '1rem',
-              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-            }}>
+              gap: '0.75rem',
+              padding: '0.75rem',
+              // Adjust header background to fit the new glassmorphism theme
+              background: theme === 'light' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '12px',
+              marginBottom: '0.75rem',
+              border: `1px solid ${theme === 'light' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.15)'}`
+            }}
+          >
+            <div 
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: theme === 'light' ? 'linear-gradient(135deg, #a77be6 0%, #c299ff 100%)' : 'linear-gradient(135deg, #8a2be2 0%, #dda0dd 100%)', // Purple gradient
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: '1rem',
+                boxShadow: theme === 'light' ? '0 4px 12px rgba(167, 123, 230, 0.3)' : '0 4px 12px rgba(138, 43, 226, 0.4)'
+              }}
+            >
               <span>{getInitials(user.name)}</span>
             </div>
             <div style={{ flex: 1 }}>
-              <h4 style={{
-                fontSize: '1rem',
-                fontWeight: '600',
-                color: '#1a202c',
-                margin: '0 0 0.25rem 0',
-              }}>{user.name}</h4>
-              <p style={{
-                fontSize: '0.8rem',
-                color: '#64748b',
-                margin: '0',
-              }}>{user.email || 'user@example.com'}</p>
+              <h4 
+                style={{
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  color: currentTheme.text.primary,
+                  margin: '0 0 0.25rem 0'
+                }}
+              >
+                {user.name}
+              </h4>
+              <p 
+                style={{
+                  fontSize: '0.8rem',
+                  color: currentTheme.text.secondary,
+                  margin: 0
+                }}
+              >
+                {user.email || 'user@example.com'}
+              </p>
             </div>
           </div>
 
           {/* Menu Items */}
-          <div>
-            {/* Resume History Button */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             <MenuItemPortal
               icon="📄"
               title="Resume History"
@@ -143,27 +209,29 @@ const UserProfile = ({ user, onLogout, toggleHistoryView }) => {
                 toggleHistoryView();
                 setShowMenu(false);
               }}
+              theme={theme}
             />
 
-            {/* Divider */}
-            <div style={{
-              height: '1px',
-              background: 'linear-gradient(90deg, transparent 0%, rgba(148, 163, 184, 0.3) 50%, transparent 100%)',
-              margin: '0.5rem 0',
-            }}></div>
+            <div 
+              style={{
+                height: '1px',
+                background: `linear-gradient(90deg, transparent 0%, ${theme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'} 50%, transparent 100%)`,
+                margin: '0.5rem 0'
+              }}
+            />
 
-            {/* Logout Button */}
             <MenuItemPortal
               icon="🚪"
               title="Sign Out"
               subtitle="Logout from your account"
               onClick={handleLogout}
               isLogout={true}
+              theme={theme}
             />
           </div>
         </div>
 
-        <style>{`
+        <style jsx>{`
           @keyframes menuFade {
             from {
               opacity: 0;
@@ -174,27 +242,15 @@ const UserProfile = ({ user, onLogout, toggleHistoryView }) => {
               transform: translateY(0) scale(1);
             }
           }
-          
-          .user-dropdown-portal::-webkit-scrollbar {
-            width: 6px;
-          }
-          
-          .user-dropdown-portal::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 3px;
-          }
-          
-          .user-dropdown-portal::-webkit-scrollbar-thumb {
-            background: rgba(102, 126, 234, 0.3);
-            border-radius: 3px;
-          }
         `}</style>
-      </>,
+      </div>,
       document.body
     );
   };
 
-  const MenuItemPortal = ({ icon, title, subtitle, onClick, isLogout = false }) => {
+  const MenuItemPortal = ({ icon, title, subtitle, onClick, isLogout = false, theme }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
     return (
       <button
         onClick={onClick}
@@ -209,55 +265,72 @@ const UserProfile = ({ user, onLogout, toggleHistoryView }) => {
           cursor: 'pointer',
           textAlign: 'left',
           width: '100%',
-          transition: 'all 0.2s ease',
+          transition: 'all 0.3s ease-in-out',
           marginBottom: '0.25rem',
+          ...(isHovered && {
+            background: isLogout 
+              ? 'rgba(220, 38, 38, 0.1)' 
+              : theme === 'light' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.05)', // Hover background for menu items
+            transform: 'translateX(4px)',
+            boxShadow: isLogout 
+              ? '0 4px 12px rgba(220, 38, 38, 0.2)' 
+              : theme === 'light' ? '0 4px 12px rgba(0, 0, 0, 0.05)' : '0 4px 12px rgba(144, 205, 244, 0.1)'
+          })
         }}
-        onMouseEnter={(e) => {
-          if (isLogout) {
-            e.target.style.background = 'rgba(239, 68, 68, 0.1)';
-            e.target.style.color = '#dc2626';
-          } else {
-            e.target.style.background = 'rgba(102, 126, 234, 0.1)';
-          }
-          e.target.style.transform = 'translateX(4px)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.background = 'transparent';
-          e.target.style.color = 'inherit';
-          e.target.style.transform = 'translateX(0)';
-        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        <div style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '8px',
-          background: isLogout ? 'rgba(239, 68, 68, 0.1)' : 'rgba(102, 126, 234, 0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '1rem',
-          flexShrink: 0,
-        }}>
+        <div 
+          style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            background: isLogout 
+              ? 'rgba(220, 38, 38, 0.1)' 
+              : theme === 'light' ? 'rgba(167, 123, 230, 0.1)' : 'rgba(138, 43, 226, 0.1)', // Purple accents
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1rem',
+            flexShrink: 0,
+            transition: 'all 0.3s ease-in-out'
+          }}
+        >
           {icon}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            color: isLogout ? '#dc2626' : '#1a202c',
-            marginBottom: '0.2rem',
-          }}>{title}</div>
-          <div style={{
-            fontSize: '0.75rem',
-            color: isLogout ? '#f87171' : '#64748b',
-            fontWeight: '500',
-          }}>{subtitle}</div>
+          <div 
+            style={{
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              color: isLogout ? '#dc2626' : currentTheme.text.primary,
+              marginBottom: '0.2rem',
+              transition: 'all 0.3s ease-in-out'
+            }}
+          >
+            {title}
+          </div>
+          <div 
+            style={{
+              fontSize: '0.75rem',
+              color: isLogout ? '#f87171' : currentTheme.text.secondary,
+              fontWeight: 500,
+              transition: 'all 0.3s ease-in-out'
+            }}
+          >
+            {subtitle}
+          </div>
         </div>
-        <div style={{
-          color: isLogout ? '#dc2626' : '#94a3b8',
-          fontSize: '0.8rem',
-          flexShrink: 0,
-        }}>→</div>
+        <div 
+          style={{
+            color: isLogout ? '#dc2626' : currentTheme.text.secondary,
+            fontSize: '0.8rem',
+            flexShrink: 0,
+            transition: 'all 0.3s ease-in-out'
+          }}
+        >
+          →
+        </div>
       </button>
     );
   };
@@ -272,90 +345,104 @@ const UserProfile = ({ user, onLogout, toggleHistoryView }) => {
           alignItems: 'center',
           gap: '0.75rem',
           padding: '0.5rem 1rem',
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
           borderRadius: '50px',
           cursor: 'pointer',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'all 0.3s ease-in-out',
           minWidth: '200px',
-          ...(showMenu && {
-            background: 'rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-          })
+          backdropFilter: 'blur(20px)', // Glassmorphism blur for the main trigger
+          ...currentTheme.trigger,
+          ...(showMenu && currentTheme.triggerHover)
         }}
-        onMouseEnter={(e) => {
+        onMouseOver={(e) => {
           if (!showMenu) {
-            e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-            e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
+            Object.assign(e.currentTarget.style, currentTheme.triggerHover);
+            e.currentTarget.style.transform = 'translateY(-2px)';
           }
         }}
-        onMouseLeave={(e) => {
+        onMouseOut={(e) => {
           if (!showMenu) {
-            e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = 'none';
+            Object.assign(e.currentTarget.style, currentTheme.trigger);
+            e.currentTarget.style.transform = 'translateY(0)';
           }
         }}
       >
-        <div style={{
-          position: 'relative',
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)',
-          flexShrink: 0,
-        }}>
-          <span style={{
-            color: 'white',
-            fontWeight: '700',
-            fontSize: '0.875rem',
-            letterSpacing: '0.5px',
-          }}>{getInitials(user.name)}</span>
-          <div style={{
-            position: 'absolute',
-            bottom: '-2px',
-            right: '-2px',
-            width: '12px',
-            height: '12px',
-            background: '#10b981',
-            border: '2px solid white',
+        <div 
+          style={{
+            position: 'relative',
+            width: '40px',
+            height: '40px',
             borderRadius: '50%',
-            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)',
-          }}></div>
+            background: theme === 'light' ? 'linear-gradient(135deg, #a77be6 0%, #c299ff 100%)' : 'linear-gradient(135deg, #8a2be2 0%, #dda0dd 100%)', // Purple gradient
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: theme === 'light' ? '0 4px 12px rgba(167, 123, 230, 0.3)' : '0 4px 12px rgba(138, 43, 226, 0.4)',
+            flexShrink: 0
+          }}
+        >
+          <span 
+            style={{
+              color: 'white',
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              letterSpacing: '0.5px'
+            }}
+          >
+            {getInitials(user.name)}
+          </span>
+          <div 
+            style={{
+              position: 'absolute',
+              bottom: '-2px',
+              right: '-2px',
+              width: '12px',
+              height: '12px',
+              background: theme === 'light' ? '#28a745' : '#51cf66',
+              border: '2px solid rgba(255, 255, 255, 0.9)',
+              borderRadius: '50%',
+              boxShadow: theme === 'light' ? '0 2px 8px rgba(40, 167, 69, 0.4)' : '0 2px 8px rgba(81, 207, 102, 0.4)'
+            }}
+          />
         </div>
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.25rem',
-          minWidth: 0,
-        }}>
-          <span style={{
-            color: 'white',
-            fontWeight: '600',
-            fontSize: '0.95rem',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}>{user.name}</span>
-          <span style={{
-            color: 'rgba(255, 255, 255, 0.7)',
-            fontSize: '0.75rem',
-            fontWeight: '500',
-          }}>Online</span>
+        <div 
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.25rem',
+            minWidth: 0
+          }}
+        >
+          <span 
+            style={{
+              color: currentTheme.text.primary, // Using primary text color for the name
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {user.name}
+          </span>
+          <span 
+            style={{
+              color: currentTheme.text.secondary, // Using secondary text color for "Online"
+              fontSize: '0.75rem',
+              fontWeight: 500
+            }}
+          >
+            Online
+          </span>
         </div>
-        <div style={{
-          color: 'rgba(255, 255, 255, 0.8)',
-          transition: 'all 0.3s ease',
-          flexShrink: 0,
-          transform: showMenu ? 'rotate(180deg)' : 'rotate(0deg)',
-        }}>
+        <div 
+          style={{
+            color: currentTheme.text.secondary, // Using secondary text color for the arrow
+            transition: 'all 0.3s ease-in-out',
+            flexShrink: 0,
+            transform: showMenu ? 'rotate(180deg)' : 'rotate(0deg)'
+          }}
+        >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -363,6 +450,28 @@ const UserProfile = ({ user, onLogout, toggleHistoryView }) => {
       </div>
 
       <MenuPortal />
+
+      <style jsx>{`
+        /* Responsive Design */
+        @media (max-width: 768px) {
+          .user-profile-trigger {
+            min-width: 180px !important;
+            padding: 0.4rem 0.8rem !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .user-profile-trigger {
+            min-width: 160px !important;
+            padding: 0.4rem 0.6rem !important;
+          }
+          
+          #user-dropdown-portal {
+            min-width: 260px !important;
+            max-width: 95vw !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

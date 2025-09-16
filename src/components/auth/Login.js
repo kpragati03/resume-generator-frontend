@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const Login = ({ handleAuthSuccess }) => {
+// --- MODIFIED: Add `onSwitchToRegister` to the props ---
+const Login = ({ handleAuthSuccess, theme, onSwitchToRegister }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -27,66 +28,236 @@ const Login = ({ handleAuthSuccess }) => {
         console.log('Login successful! Token received:', res.data.token);
         handleAuthSuccess(res.data.token);
       }
-    } catch (err) {
-      console.error(err.response.data);
+    } catch (err)
+     {
+      console.error(err.response ? err.response.data : 'An error occurred');
       alert('Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const themeStyles = {
+    light: {
+      container: {
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: '#212529'
+      },
+      card: {
+        background: 'rgba(255, 255, 255, 0.95)',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: '0 32px 64px rgba(0, 0, 0, 0.12)',
+        color: '#212529'
+      },
+      input: {
+        background: 'rgba(255, 255, 255, 0.8)',
+        border: '2px solid rgba(102, 126, 234, 0.2)',
+        color: '#212529'
+      },
+      inputFocused: {
+        borderColor: '#667eea',
+        boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.15)'
+      },
+      button: {
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        boxShadow: '0 8px 32px rgba(102, 126, 234, 0.4)'
+      },
+      text: {
+        primary: '#212529',
+        secondary: '#495057',
+        muted: '#6c757d'
+      }
+    },
+    dark: {
+      container: {
+        background: 'linear-gradient(135deg, #2d3748 0%, #4a5568 50%, #2d3748 100%)',
+        color: '#f7fafc'
+      },
+      card: {
+        background: 'rgba(45, 55, 72, 0.95)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 32px 64px rgba(102, 126, 234, 0.2), 0 16px 32px rgba(0, 0, 0, 0.3)',
+        color: '#f7fafc'
+      },
+      input: {
+        background: 'rgba(255, 255, 255, 0.05)',
+        border: '2px solid rgba(255, 255, 255, 0.15)',
+        color: '#f7fafc'
+      },
+      inputFocused: {
+        borderColor: '#90cdf4',
+        boxShadow: '0 0 0 4px rgba(144, 205, 244, 0.2)',
+        background: 'rgba(255, 255, 255, 0.08)'
+      },
+      button: {
+        background: 'linear-gradient(135deg, #4299e1 0%, #90cdf4 100%)',
+        boxShadow: '0 8px 32px rgba(66, 153, 225, 0.4)'
+      },
+      text: {
+        primary: '#f7fafc',
+        secondary: '#e2e8f0',
+        muted: '#a0aec0'
+      }
+    }
+  };
+
+  const currentTheme = themeStyles[theme];
+
   return (
-    <div className="login-container">
-      <div className="login-card">
+    <div 
+      className="login-container"
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem 1rem',
+        position: 'relative',
+        overflow: 'hidden',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        transition: 'all 0.3s ease-in-out',
+        ...currentTheme.container
+      }}
+    >
+      <div 
+        className="login-card"
+        style={{
+          width: '100%',
+          maxWidth: '480px',
+          borderRadius: '24px',
+          padding: '3rem 2.5rem',
+          position: 'relative',
+          zIndex: 10,
+          animation: 'slideUp 0.6s ease-out',
+          transition: 'all 0.3s ease-in-out',
+          backdropFilter: 'blur(20px)',
+          ...currentTheme.card
+        }}
+      >
         {/* Header Section */}
-        <div className="login-header">
-          <div className="logo-icon">
+        <div 
+          className="login-header"
+          style={{ textAlign: 'center', marginBottom: '2.5rem' }}
+        >
+          <div 
+            className="logo-icon"
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              margin: '0 auto 1.5rem auto',
+              transition: 'all 0.3s ease-in-out',
+              background: theme === 'light' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #4299e1 0%, #90cdf4 100%)',
+              boxShadow: theme === 'light' ? '0 8px 32px rgba(102, 126, 234, 0.3)' : '0 8px 32px rgba(66, 153, 225, 0.4)'
+            }}
+          >
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
               <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z" stroke="currentColor" strokeWidth="2"/>
               <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2"/>
             </svg>
           </div>
-          <h1 className="login-title">Welcome Back</h1>
-          <p className="login-subtitle">Sign in to continue building your career</p>
+          <h1 
+            className="login-title"
+            style={{
+              fontSize: '2.25rem',
+              fontWeight: 700,
+              margin: '0 0 0.75rem 0',
+              letterSpacing: '-0.025em',
+              transition: 'all 0.3s ease-in-out',
+              color: currentTheme.text.primary
+            }}
+          >
+            Welcome Back
+          </h1>
+          <p 
+            className="login-subtitle"
+            style={{
+              fontSize: '1.1rem',
+              margin: 0,
+              fontWeight: 400,
+              transition: 'all 0.3s ease-in-out',
+              color: currentTheme.text.secondary
+            }}
+          >
+            Sign in to continue building your career
+          </p>
         </div>
 
         {/* Login Form */}
-        <form onSubmit={onSubmit} className="login-form">
+        <form onSubmit={onSubmit} style={{ marginBottom: '2rem' }}>
           {/* Email Field */}
-          <div className="form-group">
-            <label className="form-label">
-              <svg className="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                marginBottom: '0.75rem',
+                transition: 'all 0.3s ease-in-out',
+                color: currentTheme.text.primary
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: currentTheme.text.muted }}>
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="2"/>
                 <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2"/>
               </svg>
               Email Address
             </label>
-            <div className="input-wrapper">
-              <input
-                type="email"
-                name="email"
-                value={email}
-                onChange={onChange}
-                onFocus={() => setFocusedField('email')}
-                onBlur={() => setFocusedField('')}
-                placeholder="Enter your email address"
-                required
-                className={`form-input ${focusedField === 'email' ? 'focused' : ''}`}
-              />
-            </div>
+            <input
+              type="email"
+              name="email"
+              value={email}
+              onChange={onChange}
+              onFocus={() => setFocusedField('email')}
+              onBlur={() => setFocusedField('')}
+              placeholder="Enter your email address"
+              required
+              style={{
+                width: '100%',
+                height: '56px',
+                padding: '0 1rem',
+                borderRadius: '16px',
+                fontSize: '1rem',
+                transition: 'all 0.3s ease-in-out',
+                outline: 'none',
+                fontWeight: 500,
+                ...currentTheme.input,
+                ...(focusedField === 'email' ? {
+                  transform: 'translateY(-2px)',
+                  ...currentTheme.inputFocused
+                } : {})
+              }}
+            />
           </div>
 
           {/* Password Field */}
-          <div className="form-group">
-            <label className="form-label">
-              <svg className="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                marginBottom: '0.75rem',
+                transition: 'all 0.3s ease-in-out',
+                color: currentTheme.text.primary
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: currentTheme.text.muted }}>
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
                 <circle cx="12" cy="16" r="1" stroke="currentColor" strokeWidth="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2"/>
               </svg>
               Password
             </label>
-            <div className="input-wrapper">
+            <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
@@ -96,12 +267,46 @@ const Login = ({ handleAuthSuccess }) => {
                 onBlur={() => setFocusedField('')}
                 placeholder="Enter your password"
                 required
-                className={`form-input ${focusedField === 'password' ? 'focused' : ''}`}
+                style={{
+                  width: '100%',
+                  height: '56px',
+                  padding: '0 1rem',
+                  borderRadius: '16px',
+                  fontSize: '1rem',
+                  transition: 'all 0.3s ease-in-out',
+                  outline: 'none',
+                  fontWeight: 500,
+                  ...currentTheme.input,
+                  ...(focusedField === 'password' ? {
+                    transform: 'translateY(-2px)',
+                    ...currentTheme.inputFocused
+                  } : {})
+                }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="password-toggle"
+                style={{
+                  position: 'absolute',
+                  right: '1rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease-in-out',
+                  padding: '0.5rem',
+                  borderRadius: '8px',
+                  color: currentTheme.text.muted
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.color = theme === 'light' ? '#667eea' : '#90cdf4';
+                  e.target.style.background = theme === 'light' ? 'rgba(102, 126, 234, 0.1)' : 'rgba(144, 205, 244, 0.15)';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.color = currentTheme.text.muted;
+                  e.target.style.background = 'transparent';
+                }}
               >
                 {showPassword ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -120,100 +325,194 @@ const Login = ({ handleAuthSuccess }) => {
           </div>
 
           {/* Remember Me & Forgot Password */}
-          <div className="form-options">
-            <label className="checkbox-wrapper">
-              <input type="checkbox" className="custom-checkbox" />
-              <span className="checkbox-text">Remember me</span>
+          <div 
+            style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: '2rem' 
+            }}
+          >
+            <label 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer'
+              }}
+            >
+              <input 
+                type="checkbox" 
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  transition: 'all 0.3s ease-in-out',
+                  accentColor: theme === 'light' ? '#667eea' : '#90cdf4'
+                }} 
+              />
+              <span 
+                style={{
+                  fontSize: '0.95rem',
+                  fontWeight: 500,
+                  transition: 'all 0.3s ease-in-out',
+                  color: currentTheme.text.muted
+                }}
+              >
+                Remember me
+              </span>
             </label>
-            <a href="#" className="forgot-link">Forgot Password?</a>
+            <a 
+              href="#" 
+              style={{
+                fontSize: '0.95rem',
+                textDecoration: 'none',
+                fontWeight: 600,
+                transition: 'all 0.3s ease-in-out',
+                color: theme === 'light' ? '#667eea' : '#90cdf4'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.textDecoration = 'underline';
+                e.target.style.color = theme === 'light' ? '#5a67d8' : '#63b3ed';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.textDecoration = 'none';
+                e.target.style.color = theme === 'light' ? '#667eea' : '#90cdf4';
+              }}
+            >
+              Forgot Password?
+            </a>
           </div>
 
           {/* Submit Button */}
           <button 
             type="submit" 
-            className={`submit-button ${isLoading ? 'loading' : ''}`}
             disabled={isLoading}
+            style={{
+              width: '100%',
+              height: '56px',
+              color: 'white',
+              border: 'none',
+              borderRadius: '16px',
+              fontSize: '1.05rem',
+              fontWeight: 600,
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease-in-out',
+              marginBottom: '1.5rem',
+              opacity: isLoading ? 0.8 : 1,
+              ...currentTheme.button
+            }}
+            onMouseOver={(e) => {
+              if (!isLoading) {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = theme === 'light' ? '0 12px 40px rgba(102, 126, 234, 0.5)' : '0 12px 40px rgba(66, 153, 225, 0.5)';
+              }
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = currentTheme.button.boxShadow;
+            }}
           >
-            {isLoading ? (
-              <div className="button-content">
-                <div className="loading-spinner"></div>
-                Signing In...
-              </div>
-            ) : (
-              <div className="button-content">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" strokeWidth="2"/>
-                  <polyline points="10,17 15,12 10,7" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-                Sign In to Account
-              </div>
-            )}
+            <div 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.75rem'
+              }}
+            >
+              {isLoading ? (
+                <>
+                  <div 
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      border: '2px solid rgba(255, 255, 255, 0.3)',
+                      borderTop: '2px solid white',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }}
+                  />
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" strokeWidth="2"/>
+                    <polyline points="10,17 15,12 10,7" stroke="currentColor" strokeWidth="2"/>
+                    <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  Sign In to Account
+                </>
+              )}
+            </div>
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="divider">
-          <span className="divider-text">or continue with</span>
-        </div>
-
-        {/* Social Login */}
-        <div className="social-buttons">
-          <button className="social-button google">
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            Google
-          </button>
-          <button className="social-button github">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-            </svg>
-            GitHub
-          </button>
-        </div>
-
         {/* Sign Up Link */}
-        <div className="auth-switch">
-          <p>Don't have an account? <a href="#" className="switch-link">Create an account</a></p>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: '0.95rem', margin: 0, color: currentTheme.text.secondary }}>
+            Don't have an account?{' '}
+            {/* --- MODIFIED: Added onClick handler to the link --- */}
+            <a 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                onSwitchToRegister();
+              }}
+              style={{
+                color: theme === 'light' ? '#667eea' : '#90cdf4',
+                textDecoration: 'none',
+                fontWeight: 600,
+                marginLeft: '0.5rem',
+                transition: 'all 0.3s ease-in-out',
+                cursor: 'pointer' // Added for better UX
+              }}
+              onMouseOver={(e) => {
+                e.target.style.color = theme === 'light' ? '#5a67d8' : '#63b3ed';
+                e.target.style.textDecoration = 'underline';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.color = theme === 'light' ? '#667eea' : '#90cdf4';
+                e.target.style.textDecoration = 'none';
+              }}
+            >
+              Create an account
+            </a>
+          </p>
         </div>
       </div>
 
-      {/* Background Elements */}
-      <div className="bg-decoration bg-decoration-1"></div>
-      <div className="bg-decoration bg-decoration-2"></div>
-      <div className="bg-decoration bg-decoration-3"></div>
+      {/* Background Decorations */}
+      <div 
+        style={{
+          position: 'absolute',
+          width: '300px',
+          height: '300px',
+          top: '-150px',
+          right: '-150px',
+          borderRadius: '50%',
+          background: theme === 'light' ? 'linear-gradient(135deg, #667eea, #764ba2)' : 'linear-gradient(135deg, #4299e1, #90cdf4)',
+          opacity: theme === 'light' ? 0.1 : 0.2,
+          zIndex: 1,
+          animation: 'float 8s ease-in-out infinite'
+        }}
+      />
+      <div 
+        style={{
+          position: 'absolute',
+          width: '200px',
+          height: '200px',
+          bottom: '-100px',
+          left: '-100px',
+          borderRadius: '50%',
+          background: theme === 'light' ? 'linear-gradient(135deg, #764ba2, #667eea)' : 'linear-gradient(135deg, #90cdf4, #4299e1)',
+          opacity: theme === 'light' ? 0.1 : 0.2,
+          zIndex: 1,
+          animation: 'float 6s ease-in-out infinite reverse'
+        }}
+      />
 
       <style jsx>{`
-        .login-container {
-          min-height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 2rem 1rem;
-          position: relative;
-          overflow: hidden;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        .login-card {
-          width: 100%;
-          max-width: 480px;
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(20px);
-          border-radius: 24px;
-          padding: 3rem 2.5rem;
-          box-shadow: 0 32px 64px rgba(0, 0, 0, 0.12);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          position: relative;
-          z-index: 10;
-          animation: slideUp 0.6s ease-out;
-        }
-
         @keyframes slideUp {
           from {
             opacity: 0;
@@ -225,308 +524,8 @@ const Login = ({ handleAuthSuccess }) => {
           }
         }
 
-        .login-header {
-          text-align: center;
-          margin-bottom: 2.5rem;
-        }
-
-        .logo-icon {
-          width: 64px;
-          height: 64px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          margin: 0 auto 1.5rem auto;
-          box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-        }
-
-        .login-title {
-          font-size: 2.25rem;
-          font-weight: 700;
-          color: #1a202c;
-          margin: 0 0 0.75rem 0;
-          letter-spacing: -0.025em;
-        }
-
-        .login-subtitle {
-          font-size: 1.1rem;
-          color: #64748b;
-          margin: 0;
-          font-weight: 400;
-        }
-
-        .login-form {
-          margin-bottom: 2rem;
-        }
-
-        .form-group {
-          margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.95rem;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 0.75rem;
-        }
-
-        .field-icon {
-          color: #64748b;
-        }
-
-        .input-wrapper {
-          position: relative;
-        }
-
-        .form-input {
-          width: 100%;
-          height: 56px;
-          padding: 0 1rem;
-          border: 2px solid #e2e8f0;
-          border-radius: 16px;
-          font-size: 1rem;
-          background: white;
-          color: #1a202c;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          outline: none;
-          font-weight: 500;
-        }
-
-        .form-input::placeholder {
-          color: #94a3b8;
-          font-weight: 400;
-        }
-
-        .form-input.focused {
-          border-color: #667eea;
-          box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-          transform: translateY(-2px);
-        }
-
-        .password-toggle {
-          position: absolute;
-          right: 1rem;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: #64748b;
-          transition: all 0.2s ease;
-          padding: 0.5rem;
-          border-radius: 8px;
-        }
-
-        .password-toggle:hover {
-          color: #667eea;
-          background: rgba(102, 126, 234, 0.1);
-        }
-
-        .form-options {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
-
-        .checkbox-wrapper {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-        }
-
-        .custom-checkbox {
-          width: 18px;
-          height: 18px;
-          accent-color: #667eea;
-        }
-
-        .checkbox-text {
-          font-size: 0.95rem;
-          color: #64748b;
-          font-weight: 500;
-        }
-
-        .forgot-link {
-          font-size: 0.95rem;
-          color: #667eea;
-          text-decoration: none;
-          font-weight: 600;
-          transition: all 0.2s ease;
-        }
-
-        .forgot-link:hover {
-          color: #5a67d8;
-          text-decoration: underline;
-        }
-
-        .submit-button {
-          width: 100%;
-          height: 56px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          border: none;
-          border-radius: 16px;
-          font-size: 1.05rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-          margin-bottom: 1.5rem;
-        }
-
-        .submit-button:hover:not(.loading) {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
-        }
-
-        .submit-button:active {
-          transform: translateY(0);
-        }
-
-        .submit-button.loading {
-          cursor: not-allowed;
-          opacity: 0.8;
-        }
-
-        .button-content {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.75rem;
-        }
-
-        .loading-spinner {
-          width: 20px;
-          height: 20px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top: 2px solid white;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
         @keyframes spin {
           to { transform: rotate(360deg); }
-        }
-
-        .divider {
-          position: relative;
-          text-align: center;
-          margin: 2rem 0;
-        }
-
-        .divider::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
-        }
-
-        .divider-text {
-          background: white;
-          padding: 0 1.5rem;
-          font-size: 0.9rem;
-          color: #64748b;
-          font-weight: 500;
-        }
-
-        .social-buttons {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-          margin-bottom: 2rem;
-        }
-
-        .social-button {
-          height: 52px;
-          border: 2px solid #e2e8f0;
-          background: white;
-          border-radius: 14px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.75rem;
-          font-size: 0.95rem;
-          font-weight: 600;
-          color: #374151;
-        }
-
-        .social-button:hover {
-          border-color: #667eea;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .social-button.github {
-          color: #1a202c;
-        }
-
-        .auth-switch {
-          text-align: center;
-        }
-
-        .auth-switch p {
-          font-size: 0.95rem;
-          color: #64748b;
-          margin: 0;
-        }
-
-        .switch-link {
-          color: #667eea;
-          text-decoration: none;
-          font-weight: 600;
-          margin-left: 0.5rem;
-        }
-
-        .switch-link:hover {
-          color: #5a67d8;
-          text-decoration: underline;
-        }
-
-        .bg-decoration {
-          position: absolute;
-          border-radius: 50%;
-          opacity: 0.1;
-          z-index: 1;
-        }
-
-        .bg-decoration-1 {
-          width: 300px;
-          height: 300px;
-          background: linear-gradient(135deg, #667eea, #764ba2);
-          top: -150px;
-          right: -150px;
-          animation: float 8s ease-in-out infinite;
-        }
-
-        .bg-decoration-2 {
-          width: 200px;
-          height: 200px;
-          background: linear-gradient(135deg, #f093fb, #f5576c);
-          bottom: -100px;
-          left: -100px;
-          animation: float 6s ease-in-out infinite reverse;
-        }
-
-        .bg-decoration-3 {
-          width: 150px;
-          height: 150px;
-          background: linear-gradient(135deg, #4facfe, #00f2fe);
-          top: 50%;
-          left: -75px;
-          animation: float 10s ease-in-out infinite;
         }
 
         @keyframes float {
@@ -537,43 +536,30 @@ const Login = ({ handleAuthSuccess }) => {
         /* Responsive Design */
         @media (max-width: 768px) {
           .login-container {
-            padding: 1rem;
+            padding: 1rem !important;
           }
-
           .login-card {
-            padding: 2rem 1.5rem;
+            padding: 2rem 1.5rem !important;
           }
-
           .login-title {
-            font-size: 2rem;
+            font-size: 2rem !important;
           }
-
           .login-subtitle {
-            font-size: 1rem;
-          }
-
-          .social-buttons {
-            grid-template-columns: 1fr;
+            font-size: 1rem !important;
           }
         }
 
         @media (max-width: 480px) {
           .login-card {
-            padding: 1.5rem 1.25rem;
-            border-radius: 20px;
+            padding: 1.5rem 1.25rem !important;
+            border-radius: 20px !important;
           }
-
           .logo-icon {
-            width: 56px;
-            height: 56px;
+            width: 56px !important;
+            height: 56px !important;
           }
-
           .login-title {
-            font-size: 1.75rem;
-          }
-
-          .form-input, .submit-button {
-            height: 52px;
+            font-size: 1.75rem !important;
           }
         }
       `}</style>
