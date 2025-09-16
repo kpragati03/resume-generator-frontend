@@ -1,3 +1,4 @@
+import API_BASE_URL from './config';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import axios from 'axios';
@@ -281,8 +282,7 @@ function App() {
       console.log('processedResumeData:', processedResumeData);
       console.log('Final dataToSend:', JSON.stringify(dataToSend, null, 2));
       
-      const res = await axios.post('http://localhost:5000/api/resume', dataToSend, config);
-      console.log('Resume saved successfully!', res.data);
+const res = await axios.post(`${API_BASE_URL}/api/resume`, dataToSend, config);      console.log('Resume saved successfully!', res.data);
       alert('Resume saved successfully!');
       
     } catch (err) {
@@ -584,8 +584,7 @@ function App() {
     
     try {
       const config = { headers: { 'x-auth-token': token } };
-      const res = await axios.get('http://localhost:5000/api/auth/me', config);
-      
+const res = await axios.get(`${API_BASE_URL}/api/auth/me`, config);      
       setUser({ id: res.data.id, name: res.data.name, email: res.data.email });
       setIsLoggedIn(true);
       setShowAuth(false);
@@ -809,8 +808,7 @@ function App() {
       if (token) {
         try {
           const config = { headers: { 'x-auth-token': token } };
-          const res = await axios.get('http://localhost:5000/api/auth/me', config);
-          
+const res = await axios.get(`${API_BASE_URL}/api/auth/me`, config);          
           setIsLoggedIn(true);
           setUser({ id: res.data.id, name: res.data.name, email: res.data.email });
           console.log('Real user data fetched:', res.data);

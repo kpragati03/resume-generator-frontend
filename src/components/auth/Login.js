@@ -1,3 +1,4 @@
+import API_BASE_URL from '../../config';
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -21,7 +22,7 @@ const Login = ({ handleAuthSuccess, theme, onSwitchToRegister }) => {
     setIsLoading(true);
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/auth/login',
+        `${API_BASE_URL}/api/auth/login`,
         formData
       );
       if (res.data.token) {
