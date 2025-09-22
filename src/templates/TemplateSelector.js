@@ -5,7 +5,6 @@ const TemplateSelector = ({ handleColorChange, handleTemplateChange, selectedTem
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   const isDarkMode = theme === 'dark';
 
-  // UPDATED: Added 4 new colors and enhanced gradients
   const colors = [
     { 
       name: 'Midnight Blue', 
@@ -47,7 +46,6 @@ const TemplateSelector = ({ handleColorChange, handleTemplateChange, selectedTem
       hex: '#556B2F',
       gradient: 'linear-gradient(135deg, #556B2F 0%, #6B8E23 100%)',
     },
-    // NEW COLORS START HERE
     { 
       name: 'Charcoal Slate', 
       hex: '#414A4C',
@@ -68,7 +66,6 @@ const TemplateSelector = ({ handleColorChange, handleTemplateChange, selectedTem
       hex: '#87AE73',
       gradient: 'linear-gradient(135deg, #87AE73 0%, #A6C396 100%)',
     },
-    // NEW COLORS END HERE
     { 
       name: 'Stone Gray', 
       hex: '#7A797A',
@@ -87,18 +84,6 @@ const TemplateSelector = ({ handleColorChange, handleTemplateChange, selectedTem
   ];
   
   const templates = [
-    { 
-      name: 'Classic', 
-      id: 'classic',
-      description: 'Timeless and elegant design with traditional layout perfect for corporate roles',
-      features: ['Traditional Layout', 'ATS Friendly', 'Corporate Style', 'Professional Headers'],
-      recommended: 'Finance, Legal, Banking, Insurance, Government',
-      previewStyle: {
-        type: 'classic',
-        headerHeight: '30%',
-        layout: 'single-column'
-      }
-    },
     { 
       name: 'Creative', 
       id: 'creative',
@@ -121,6 +106,18 @@ const TemplateSelector = ({ handleColorChange, handleTemplateChange, selectedTem
         type: 'modern',
         headerHeight: '25%',
         layout: 'modern-grid'
+      }
+    },
+    { 
+      name: 'Classic', 
+      id: 'classic',
+      description: 'Timeless and elegant design with traditional layout perfect for corporate roles',
+      features: ['Traditional Layout', 'ATS Friendly', 'Corporate Style', 'Professional Headers'],
+      recommended: 'Finance, Legal, Banking, Insurance, Government',
+      previewStyle: {
+        type: 'classic',
+        headerHeight: '30%',
+        layout: 'single-column'
       }
     },
     { 
@@ -313,7 +310,6 @@ const TemplateSelector = ({ handleColorChange, handleTemplateChange, selectedTem
     return null;
   };
 
-  // UPDATED: Styles for glassmorphism and enhanced hover effects
   const themeStyles = {
     container: {
       background: isDarkMode 
@@ -673,71 +669,70 @@ const TemplateSelector = ({ handleColorChange, handleTemplateChange, selectedTem
       
       <div className="section">
         <div className="section-header">
-            <h3 style={themeStyles.sectionTitle}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: '#1B6CA8' }}>
-                    <path d="M12 2.69l5.66 5.66a8 8 0 11-11.32 0L12 2.69z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M12 22a8 8 0 005.66-13.66" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                Select a Color Scheme
-            </h3>
-            <p style={themeStyles.sectionDescription}>Pick a color that will be used for headers, titles, and accents in your resume.</p>
+          <h3 style={themeStyles.sectionTitle}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: '#1B6CA8' }}>
+              <path d="M12 2.69l5.66 5.66a8 8 0 11-11.32 0L12 2.69z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 22a8 8 0 005.66-13.66" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Select a Color Scheme
+          </h3>
+          <p style={themeStyles.sectionDescription}>Pick a color that will be used for headers, titles, and accents in your resume.</p>
         </div>
         <div className="colors-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '1.5rem' }}>
-            {/* UPDATED: Revamped color option rendering for glassmorphism and hover */}
-            {colors.map((color) => {
-                const isSelected = selectedColor === color.hex;
-                const isHovered = hoveredColor === color.hex;
-                return (
-                    <div
-                        key={color.hex}
-                        className={`color-option ${isSelected ? 'selected' : ''}`}
-                        style={{
-                            ...themeStyles.colorOption,
-                            transform: isHovered ? 'translateY(-8px) scale(1.05)' : 'none',
-                            boxShadow: isHovered ? (isDarkMode ? '0 16px 40px rgba(0,0,0,0.4)' : '0 16px 40px rgba(0,0,0,0.2)') : 'none',
-                            borderColor: isSelected ? color.hex : (isHovered ? color.hex : themeStyles.colorOption.border),
-                            borderWidth: isSelected || isHovered ? '2px' : '1px'
-                        }}
-                        onClick={() => handleColorSelect(color)}
-                        onMouseEnter={() => setHoveredColor(color.hex)}
-                        onMouseLeave={() => setHoveredColor(null)}
-                    >
-                        <div style={{
-                            position: 'absolute',
-                            top: 0, left: 0, right: 0, bottom: 0,
-                            background: color.gradient,
-                            borderRadius: 'inherit',
-                            opacity: isSelected ? 1 : 0.85,
-                            transition: 'opacity 0.3s ease'
-                        }}></div>
-                        
-                        {isSelected && (
-                            <div className="selection-badge-color" style={{
-                                position: 'absolute', top: '0.75rem', right: '0.75rem',
-                                width: '24px', height: '24px',
-                                background: 'rgba(255, 255, 255, 0.8)', color: color.hex,
-                                borderRadius: '50%', display: 'flex', alignItems: 'center',
-                                justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                                backdropFilter: 'blur(5px)', zIndex: 2
-                            }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                    <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            </div>
-                        )}
-                        <span style={{ 
-                            color: '#ffffff', 
-                            fontWeight: '600', 
-                            fontSize: '0.8rem', 
-                            textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-                            position: 'relative',
-                            zIndex: 1 
-                        }}>
-                            {color.name}
-                        </span>
-                    </div>
-                );
-            })}
+          {colors.map((color) => {
+            const isSelected = selectedColor === color.hex;
+            const isHovered = hoveredColor === color.hex;
+            return (
+              <div
+                key={color.hex}
+                className={`color-option ${isSelected ? 'selected' : ''}`}
+                style={{
+                  ...themeStyles.colorOption,
+                  transform: isHovered ? 'translateY(-8px) scale(1.05)' : 'none',
+                  boxShadow: isHovered ? (isDarkMode ? '0 16px 40px rgba(0,0,0,0.4)' : '0 16px 40px rgba(0,0,0,0.2)') : 'none',
+                  borderColor: isSelected ? color.hex : (isHovered ? color.hex : themeStyles.colorOption.border),
+                  borderWidth: isSelected || isHovered ? '2px' : '1px'
+                }}
+                onClick={() => handleColorSelect(color)}
+                onMouseEnter={() => setHoveredColor(color.hex)}
+                onMouseLeave={() => setHoveredColor(null)}
+              >
+                <div style={{
+                  position: 'absolute',
+                  top: 0, left: 0, right: 0, bottom: 0,
+                  background: color.gradient,
+                  borderRadius: 'inherit',
+                  opacity: isSelected ? 1 : 0.85,
+                  transition: 'opacity 0.3s ease'
+                }}></div>
+                
+                {isSelected && (
+                  <div className="selection-badge-color" style={{
+                    position: 'absolute', top: '0.75rem', right: '0.75rem',
+                    width: '24px', height: '24px',
+                    background: 'rgba(255, 255, 255, 0.8)', color: color.hex,
+                    borderRadius: '50%', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                    backdropFilter: 'blur(5px)', zIndex: 2
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
+                <span style={{ 
+                  color: '#ffffff', 
+                  fontWeight: '600', 
+                  fontSize: '0.8rem', 
+                  textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                  position: 'relative',
+                  zIndex: 1 
+                }}>
+                  {color.name}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -772,7 +767,7 @@ const TemplateSelector = ({ handleColorChange, handleTemplateChange, selectedTem
             <div style={themeStyles.summaryItem}>
               <span style={themeStyles.summaryLabel}>Template:</span>
               <span style={{ fontWeight: '600', color: '#1B6CA8' }}>
-                {templates.find(t => t.id === selectedTemplate)?.name || 'Classic'}
+                {templates.find(t => t.id === selectedTemplate)?.name || 'Creative'}
               </span>
             </div>
             <div style={themeStyles.summaryItem}>
@@ -784,7 +779,7 @@ const TemplateSelector = ({ handleColorChange, handleTemplateChange, selectedTem
             <div style={themeStyles.summaryItem}>
               <span style={themeStyles.summaryLabel}>Best For:</span>
               <span style={{ fontWeight: '600', color: '#1B6CA8' }}>
-                {templates.find(t => t.id === selectedTemplate)?.recommended || 'Finance, Legal, Banking, Insurance, Government'}
+                {templates.find(t => t.id === selectedTemplate)?.recommended || 'Design, Marketing, Arts, Media, Advertising'}
               </span>
             </div>
           </div>
