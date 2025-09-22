@@ -112,7 +112,7 @@ npm install
 ### 3. Configure Environment
 Create a `src/config.js` file:
 ```javascript
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://resume-generator-website.up.railway.app';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://resume-generator-backend-o01z.onrender.com';
 export default API_BASE_URL;
 ```
 
@@ -302,7 +302,7 @@ GET /api/share/resume/:id
    ```
 
 2. **Environment Variables**
-   - `REACT_APP_API_URL`: https://resume-generator-website.up.railway.app
+   - `REACT_APP_API_URL`: [https://resume-generator-backend-o01z.onrender.com]
 
 3. **Build Settings**
    - **Framework Preset**: Create React App
@@ -359,7 +359,7 @@ useEffect(() => {
 - Ensure CSS is properly loaded
 
 #### API Connection Issues
-- Verify backend is running at https://resume-generator-website.up.railway.app
+- Verify backend is running at https://resume-generator-backend-o01z.onrender.com
 - Check CORS configuration
 - Validate API endpoints
 
@@ -400,7 +400,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 - [Tailwind CSS](https://tailwindcss.com/) for utility-first CSS
 - [Vercel](https://vercel.com/) for seamless deployment
 - [Bootstrap](https://getbootstrap.com/) for UI components
-- [Railway](https://railway.app/) for backend hosting
+- [Render](https://render.app/) for backend hosting
 
 ---
 
