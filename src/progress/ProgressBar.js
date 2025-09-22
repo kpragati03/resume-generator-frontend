@@ -169,134 +169,141 @@ const ProgressBar = ({ currentStep, theme }) => {
           </div>
         </div>
 
-        {/* Progress Steps */}
+        {/* Progress Steps Container */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: '3rem',
           position: 'relative',
-          flexWrap: 'wrap',
-          gap: '1rem'
+          marginBottom: '3rem'
         }}>
-          {steps.map((step, index) => (
-            <div
-              key={step.number}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                position: 'relative',
-                zIndex: 3,
-                flex: '1',
-                minWidth: '140px',
-                animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
-              }}
-            >
-              {/* Step Icon */}
-              <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: currentStep >= index 
-                  ? (currentStep === index 
-                    ? colors.gradientPrimary
-                    : colors.gradientSuccess)
-                  : colors.bgCard,
-                border: `3px solid ${
-                  currentStep >= index 
-                    ? (currentStep === index ? colors.primaryColor : colors.successColor)
-                    : colors.borderColor
-                }`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '2rem',
-                color: currentStep >= index ? '#ffffff' : colors.textMuted,
-                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                marginBottom: '1.5rem',
-                boxShadow: currentStep >= index 
-                  ? (currentStep === index 
-                    ? `0 0 30px ${colors.primaryColor}40` 
-                    : `0 0 25px ${colors.successColor}30`)
-                  : colors.shadowSm,
-                transform: currentStep >= index 
-                  ? (currentStep === index ? 'scale(1.15)' : 'scale(1.05)')
-                  : 'scale(1)',
-                position: 'relative',
-                overflow: 'hidden',
-                backdropFilter: 'blur(20px)'
-              }}>
-                {currentStep > index ? '✅' : step.icon}
-                
-                {/* Active Step Pulse Effect */}
-                {currentStep === index && (
+          {/* Connection Lines Background */}
+          <div style={{
+            position: 'absolute',
+            top: '40px',
+            left: '10%',
+            right: '10%',
+            height: '4px',
+            background: colors.borderColor,
+            zIndex: 1,
+            borderRadius: '2px'
+          }}>
+            {/* Active Progress Line */}
+            <div style={{
+              height: '100%',
+              background: colors.gradientSuccess,
+              borderRadius: '2px',
+              transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+              width: `${Math.max((currentStep / (steps.length - 1)) * 100, 0)}%`
+            }}></div>
+          </div>
+
+          {/* Steps */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            position: 'relative',
+            zIndex: 2
+          }}>
+            {steps.map((step, index) => (
+              <div
+                key={step.number}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  position: 'relative',
+                  flex: '1',
+                  animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
+                }}
+              >
+                {/* Step Icon */}
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  background: currentStep >= index 
+                    ? (currentStep === index 
+                      ? colors.gradientPrimary
+                      : colors.gradientSuccess)
+                    : colors.bgCard,
+                  border: `3px solid ${
+                    currentStep >= index 
+                      ? (currentStep === index ? colors.primaryColor : colors.successColor)
+                      : colors.borderColor
+                  }`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2rem',
+                  color: currentStep >= index ? '#ffffff' : colors.textMuted,
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  marginBottom: '1.5rem',
+                  boxShadow: currentStep >= index 
+                    ? (currentStep === index 
+                      ? `0 0 30px ${colors.primaryColor}40` 
+                      : `0 0 25px ${colors.successColor}30`)
+                    : colors.shadowSm,
+                  transform: currentStep >= index 
+                    ? (currentStep === index ? 'scale(1.15)' : 'scale(1.05)')
+                    : 'scale(1)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  backdropFilter: 'blur(20px)',
+                  zIndex: 3
+                }}>
+                  {currentStep > index ? '✅' : step.icon}
+                  
+                  {/* Active Step Pulse Effect */}
+                  {currentStep === index && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-3px',
+                      left: '-3px',
+                      right: '-3px',
+                      bottom: '-3px',
+                      borderRadius: '50%',
+                      border: `2px solid ${colors.primaryColor}`,
+                      opacity: '0.6',
+                      animation: 'pulse 2s infinite'
+                    }}></div>
+                  )}
+                </div>
+
+                {/* Step Content */}
+                <div style={{ textAlign: 'center', maxWidth: '140px' }}>
                   <div style={{
-                    position: 'absolute',
-                    top: '-3px',
-                    left: '-3px',
-                    right: '-3px',
-                    bottom: '-3px',
-                    borderRadius: '50%',
-                    border: `2px solid ${colors.primaryColor}`,
-                    opacity: '0.6',
-                    animation: 'pulse 2s infinite'
-                  }}></div>
-                )}
-              </div>
-
-              {/* Step Content */}
-              <div style={{ textAlign: 'center' }}>
-                <div style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '700',
-                  color: currentStep >= index 
-                    ? (currentStep === index ? colors.primaryColor : colors.successColor)
-                    : colors.textMuted,
-                  marginBottom: '0.5rem',
-                  transition: 'color 0.3s ease',
-                  textShadow: isDarkMode && currentStep >= index ? `0 0 10px ${currentStep === index ? colors.primaryColor : colors.successColor}` : 'none'
-                }}>
-                  Step {step.number}
-                </div>
-                <div style={{
-                  fontSize: '1.1rem',
-                  fontWeight: '600',
-                  color: currentStep >= index 
-                    ? (currentStep === index ? colors.primaryColor : colors.successColor)
-                    : colors.textSecondary,
-                  marginBottom: '0.5rem',
-                  transition: 'color 0.3s ease',
-                  textShadow: isDarkMode && currentStep >= index ? `0 0 8px ${currentStep === index ? colors.primaryColor : colors.successColor}` : 'none'
-                }}>
-                  {step.title}
-                </div>
-                <div style={{
-                  fontSize: '0.85rem',
-                  color: colors.textMuted,
-                  lineHeight: '1.4'
-                }}>
-                  {step.description}
+                    fontSize: '0.875rem',
+                    fontWeight: '700',
+                    color: currentStep >= index 
+                      ? (currentStep === index ? colors.primaryColor : colors.successColor)
+                      : colors.textMuted,
+                    marginBottom: '0.5rem',
+                    transition: 'color 0.3s ease',
+                    textShadow: isDarkMode && currentStep >= index ? `0 0 10px ${currentStep === index ? colors.primaryColor : colors.successColor}` : 'none'
+                  }}>
+                    Step {step.number}
+                  </div>
+                  <div style={{
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    color: currentStep >= index 
+                      ? (currentStep === index ? colors.primaryColor : colors.successColor)
+                      : colors.textSecondary,
+                    marginBottom: '0.5rem',
+                    transition: 'color 0.3s ease',
+                    textShadow: isDarkMode && currentStep >= index ? `0 0 8px ${currentStep === index ? colors.primaryColor : colors.successColor}` : 'none'
+                  }}>
+                    {step.title}
+                  </div>
+                  <div style={{
+                    fontSize: '0.85rem',
+                    color: colors.textMuted,
+                    lineHeight: '1.4'
+                  }}>
+                    {step.description}
+                  </div>
                 </div>
               </div>
-
-              {/* Connection Line */}
-              {index < steps.length - 1 && (
-                <div style={{
-                  position: 'absolute',
-                  top: '40px',
-                  left: '90px',
-                  right: '-90px',
-                  height: '3px',
-                  background: currentStep > index 
-                    ? colors.gradientSuccess
-                    : colors.borderColor,
-                  zIndex: 1,
-                  transition: 'background 0.6s ease',
-                  borderRadius: '2px'
-                }}></div>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Progress Info Card */}
@@ -569,17 +576,6 @@ const ProgressBar = ({ currentStep, theme }) => {
       `}</style>
     </div>
   );
-};
-
-const getStepDescription = (step) => {
-  const descriptions = [
-    "Choose your preferred template design and customize colors to match your style",
-    "Add your personal information, contact details, and professional summary", 
-    "Include your educational background, degrees, and academic achievements",
-    "Detail your work experience, roles, and professional accomplishments",
-    "List your technical skills, certifications, and core competencies"
-  ];
-  return descriptions[step] || "";
 };
 
 export default ProgressBar;

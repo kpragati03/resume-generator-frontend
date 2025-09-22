@@ -995,10 +995,7 @@ const res = await axios.get(`${API_BASE_URL}/api/auth/me`, config);
                         <button onClick={handleCreateNewResume} className="modern-btn btn-success">
                           <i className="fas fa-plus"></i> Create New Resume
                         </button>
-                        <button onClick={handlePDFDownload} className="modern-btn btn-info" disabled={isDownloading}>
-                          <i className={isDownloading ? 'fas fa-spinner fa-spin' : 'fas fa-download'}></i>
-                          {isDownloading ? 'Generating PDF...' : 'Download PDF'}
-                        </button>
+                        {/* Download PDF button removed */}
                       </div>
                     </div>
                   </div>
